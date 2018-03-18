@@ -143,8 +143,6 @@ func enterRoom(c echo.Context) error {
 
 	// Find our room
 	id := ctx.Param("id")
-	ctx.Logger().Errorf("received ID is %s", id)
-
 	var r *agenda.Room
 	for _, room := range ctx.Agenda.Rooms {
 		if room.ID() == id {
