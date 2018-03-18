@@ -93,7 +93,7 @@ type Cue struct {
 func (c *Cue) ID() string {
 	// If we don't have a name, generate one
 	if c.Name == "" {
-		c.Name = uuid.NewV1().String()
+		c.Name = uuid.Must(uuid.NewV1()).String()
 	}
 
 	return hashString(fmt.Sprintf("cue-%s", c.Name))
@@ -122,7 +122,7 @@ type Room struct {
 func (r *Room) ID() string {
 	// If we don't have a name, generate one
 	if r.Name == "" {
-		r.Name = uuid.NewV1().String()
+		r.Name = uuid.Must(uuid.NewV1()).String()
 	}
 
 	return hashString(fmt.Sprintf("room-%s", r.Name))
@@ -183,7 +183,7 @@ type Source struct {
 func (s *Source) ID() string {
 	// If we don't have a name, generate one
 	if s.Name == "" {
-		s.Name = uuid.NewV1().String()
+		s.Name = uuid.Must(uuid.NewV1()).String()
 	}
 
 	return hashString(fmt.Sprintf("source-%s", s.Name))
