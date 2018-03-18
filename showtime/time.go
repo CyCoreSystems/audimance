@@ -12,8 +12,6 @@ import (
 
 const subscriptionBufferSize = 5
 
-const CueListenAddress = ":5599"
-
 const maxUDPMessageSize = 512
 
 var minUpdateInterval = time.Duration(5) * time.Second
@@ -117,12 +115,12 @@ func (s *Service) remove(sub *Subscription) {
 }
 
 // Execute the showtime service
-func (s *Service) Run() error {
+func (s *Service) Run(qlabAddr string) error {
 
 	cue := make(chan string)
 	defer close(cue)
 
-	addr, err := net.ResolveUDPAddr("udp", CueListenAddress)
+	addr, err := net.ResolveUDPAddr("udp", qlabAddr)
 	if err != nil {
 		return errors.Wrap(err, "failed to parse cue listener address")
 	}

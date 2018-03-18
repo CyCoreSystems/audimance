@@ -27,8 +27,8 @@ var db *bolt.DB
 // addr is the listen address
 var addr string
 
-// agiaddr is the listen address for the FastAGI service
-var agiaddr string
+// qlabAddr is the listen address
+var qlabAddr string
 
 // debug enables debug mode, which uses local files
 // instead of bundled ones
@@ -59,9 +59,8 @@ type CustomContext struct {
 }
 
 func init() {
-	flag.StringVar(&addr, "addr", ":9000", "Address binding")
-	flag.StringVar(&agiaddr, "agiaddr", ":9001", "Address binding for FastAGI service")
-	flag.BoolVar(&debug, "debug", false, "Enable debug mode, which uses separate files for web development")
+	flag.StringVar(&addr, "addr", ":9000", "TCP Address on which to listen for web requests")
+	flag.StringVar(&qlabAddr, "qlab", ":9001", "UDP Address on which to listen for QLab cues")
 }
 
 func main() {
@@ -81,7 +80,7 @@ func main() {
 	// Create the showtime service
 	svc := new(showtime.Service)
 	go func() {
-		err := svc.Run()
+		err := svc.Run(qlabAddr)
 		if err != nil {
 			fmt.Printf("showtime service died: %s", err.Error())
 			os.Exit(1)
