@@ -19,7 +19,6 @@ import (
 	"github.com/labstack/gommon/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/websocket"
-	"gopkg.in/inconshreveable/log15.v2"
 )
 
 var dbFile = "/var/db/ringfree/ipc.db"
@@ -34,9 +33,6 @@ var qlabAddr string
 // debug enables debug mode, which uses local files
 // instead of bundled ones
 var debug bool
-
-// logger is the top-level logger
-var logger log15.Logger
 
 // ErrNilTarget indicates that the row/day/date has no target
 // specified.
@@ -67,9 +63,6 @@ func init() {
 
 func main() {
 	flag.Parse()
-
-	// Create a logger
-	logger = log15.New()
 
 	// Read the Agenda
 	a, err := agenda.New("agenda.yaml")
