@@ -7,7 +7,6 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/pkg/errors"
-	"golang.org/x/net/websocket"
 )
 
 const subscriptionBufferSize = 5
@@ -60,20 +59,8 @@ func (t *Time) Now() *TimePoint {
 	}
 }
 
-func (t *Time) Handler(c echo.Context) error {
-	websocket.Handler(func(ws *websocket.Conn) {
-		defer ws.Close()
-
-		// TODO: register to receive cue updates/ticks
-
-		for {
-			// TODO: distribute cue ticker data
-		}
-	}).ServeHTTP(c.Response(), c.Request())
-	return nil
-}
-
 type Service struct {
+	Echo *echo.Echo
 
 	// Times records the Cues as they are received
 	Times []*Time
@@ -172,13 +159,15 @@ func (s *Service) notify(cause string) {
 func (s *Service) processUDP(conn *net.UDPConn, cue chan string) {
 	for {
 		buf := make([]byte, maxUDPMessageSize)
-		_, err := conn.Read(buf)
+		n, err := conn.Read(buf)
 		if err != nil {
 			// TODO: handle failure; reconnect
+			s.Echo.Logger.Error(errors.Wrap(err, "failed to read from UDP port"))
 			return
 		}
 
-		recv := string(buf)
+		recv := string(buf[0:n])
+		s.Echo.Logger.Debugf("received message from QLab: %s", recv)
 
 		// Update the showtime Time
 		s.mu.Lock()

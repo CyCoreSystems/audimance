@@ -16,6 +16,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"github.com/labstack/gommon/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/websocket"
 	"gopkg.in/inconshreveable/log15.v2"
@@ -61,6 +62,7 @@ type CustomContext struct {
 func init() {
 	flag.StringVar(&addr, "addr", ":9000", "TCP Address on which to listen for web requests")
 	flag.StringVar(&qlabAddr, "qlab", ":9001", "UDP Address on which to listen for QLab cues")
+	flag.BoolVar(&debug, "debug", false, "enable debug logging")
 }
 
 func main() {
@@ -77,8 +79,12 @@ func main() {
 	}
 	spew.Dump(a)
 
+	// Create web server
+	e := echo.New()
+
 	// Create the showtime service
 	svc := new(showtime.Service)
+	svc.Echo = e
 	go func() {
 		err := svc.Run(qlabAddr)
 		if err != nil {
@@ -86,9 +92,6 @@ func main() {
 			os.Exit(1)
 		}
 	}()
-
-	// Create web server
-	e := echo.New()
 
 	// Attach middleware
 	e.Use(func(h echo.HandlerFunc) echo.HandlerFunc {
@@ -103,6 +106,10 @@ func main() {
 	})
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+
+	if debug {
+		e.Logger.SetLevel(log.DEBUG)
+	}
 
 	// Compile and attach templates
 	e.Renderer = &Template{
