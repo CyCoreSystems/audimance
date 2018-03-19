@@ -42,19 +42,19 @@ func New(filename string) (*Agenda, error) {
 type Agenda struct {
 
 	// Cues describe specific points in time in a performance
-	Cues []Cue `json:"cues" yaml:"cues"`
+	Cues []*Cue `json:"cues" yaml:"cues"`
 
 	// Rooms describe virtual rooms in which audio may be played
-	Rooms []Room `json:"rooms" yaml:"rooms"`
+	Rooms []*Room `json:"rooms" yaml:"rooms"`
 
 	// Announcements describe broadcast messages which will be played across any
 	// number of rooms
-	Announcements []Announcement `json:"announcements" yaml:"announcements"`
+	Announcements []*Announcement `json:"announcements" yaml:"announcements"`
 }
 
 // AllTracks returns the list of all tracks for all rooms and announcements so
 // that they may be prefetched.
-func (a *Agenda) AllTracks() (out []Track) {
+func (a *Agenda) AllTracks() (out []*Track) {
 
 	// Track already-seen audio files so that we do not list them twice
 	var seen []string
@@ -70,7 +70,7 @@ func (a *Agenda) AllTracks() (out []Track) {
 	// Load Announcements first
 	for _, ann := range a.Announcements {
 		if unseen(ann.ID) {
-			out = append(out, ann.Track)
+			out = append(out, &ann.Track)
 			seen = append(seen, ann.ID)
 		}
 	}
@@ -134,11 +134,11 @@ type Room struct {
 
 	// Sources describes the set of locations and audio files which will be
 	// played.
-	Sources []Source `json:"sources" yaml:"sources"`
+	Sources []*Source `json:"sources" yaml:"sources"`
 
 	// RoomTracks is a list of audio tracks to be played in a room, sourced from
 	// everywhere.  This is generally exclusive with Sources.
-	RoomTracks []Track `json:"room_tracks" yaml:"room_tracks"`
+	RoomTracks []*Track `json:"room_tracks" yaml:"room_tracks"`
 }
 
 func (r *Room) generateIDs() error {
@@ -171,7 +171,7 @@ func (r *Room) generateID() error {
 
 // AllTracks returns the list of all tracks for the room so that they may be
 // preloaded.
-func (r *Room) AllTracks() (out []Track) {
+func (r *Room) AllTracks() (out []*Track) {
 
 	// Track already-seen audio files so that we do not list them twice
 	var seen []string
@@ -220,7 +220,7 @@ type Source struct {
 
 	// Tracks is the list of audio tracks which should be played upon reaching a
 	// particular cue
-	Tracks []Track `json:"tracks" yaml:"tracks"`
+	Tracks []*Track `json:"tracks" yaml:"tracks"`
 }
 
 func (s *Source) generateIDs() error {

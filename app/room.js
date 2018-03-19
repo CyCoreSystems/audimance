@@ -3,6 +3,7 @@ var activeCue = ''
 var cueOffset = 0.0
 var roomName = ''
 var room = {}
+var sources = {}
 
 var cueChange = new Event('cueChange')
 
@@ -88,9 +89,9 @@ performanceTime.addEventListener('message', function(ev) {
 // createEnvironment sets up a new audio context and
 // binds a new Resonance Audio Scene and Room to it
 function createEnvironment() {
-   let ctx = new AudioContext()
+   var ctx = new AudioContext()
 
-   let scene = new ResonanceAudio(ctx)
+   var scene = new ResonanceAudio(ctx)
 
    scene.output.connect(ctx.destination)
 
@@ -120,13 +121,24 @@ function createEnvironment() {
 
 // createSource creates a Resonance Audio source from the
 // given audio element ID at the given spatial location in the room
-function createSource(ctx, id, loc) {
+function createSource(env, id, loc) {
+   console.log("creating source of id: "+id)
 
-   let src = ctx.createMediaElementSource(document.getElementById(id))
+   let el = document.getElementById(id)
 
-   src.setPosition(loc.x, loc.y, loc.z)
+   let elSource = env.context.createMediaElementSource(el)
 
-   return src
+   let resonanceSource = env.scene.createSource()
+
+   elSource.connect(resonanceSource.input)
+
+   resonanceSource.setPosition(loc.x, loc.y, loc.z)
+
+   return {
+      el: el,
+      elSource: elSource,
+      resonanceSource: resonanceSource,
+   }
 }
 
 // loadAgenda loads the performance Agenda and executed
@@ -151,16 +163,61 @@ function agendaLoaded(agenda) {
 
    roomName = document.getElementById("roomName").value
    if(roomName == "") {
+      console.log("no room")
       return
    }
 
-   agenda.Rooms.forEach( function(r) {
-      if r.Name == roomName {
+   agenda.rooms.forEach( function(r) {
+      if(r.name == roomName) {
          roomData = r
       }
    })
+   if(!roomData.name) {
+      console.log("no room matched")
+      return
+   }
 
-   // 
+   // Set up resonance audio
+   env = createEnvironment()
+
+   // Add sources
+   roomData.sources.forEach( function(s) {
+
+      // TODO: figure out how and if resonance audio can handle more than one
+      // track per source
+      if(!s.tracks || s.tracks.length != 1) {
+         return
+      }
+
+      let track = s.tracks[0]
+
+      var src = createSource(env, track.id, s.location)
+
+      // add the track data to the source
+      src["track"] = track
+
+      sources[s.id] = src
+
+      // seek and play to current
+      seekAndPlay(src)
+
+      // seek and play any time we receive a cue change
+      performanceTime.addEventListener('cueChange', function(ev) {
+         seekAndPlay(src)
+      })
+   } )
+   
+}
+
+function seekAndPlay(src) {
+   var since = performanceTime.sinceCue(src.track.cue)
+   if( since >= 0 ) {
+      console.log("seeking and playing "+ src.el.id +" to "+ since/1000)
+      src.el.currentTime = since/1000.0
+      src.el.play()
+   } else {
+      console.log("cue "+ src.track.cue +" has not yet occurred")
+   }
 }
 
 window.onload = loadAgenda

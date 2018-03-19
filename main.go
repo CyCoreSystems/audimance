@@ -163,7 +163,7 @@ func enterRoom(c echo.Context) error {
 	var r *agenda.Room
 	for _, room := range ctx.Agenda.Rooms {
 		if room.ID == id {
-			r = &room
+			r = room
 			break
 		}
 	}
@@ -172,8 +172,8 @@ func enterRoom(c echo.Context) error {
 	}
 
 	data := struct {
-		Announcements []agenda.Announcement `json:"announcements"`
-		Room          *agenda.Room          `json:"room"`
+		Announcements []*agenda.Announcement `json:"announcements"`
+		Room          *agenda.Room           `json:"room"`
 	}{
 		Announcements: ctx.Agenda.Announcements,
 		Room:          r,
