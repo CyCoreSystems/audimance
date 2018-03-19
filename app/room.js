@@ -1,6 +1,8 @@
 var agenda = {}
 var activeCue = ''
 var cueOffset = 0.0
+var roomName = ''
+var room = {}
 
 var cueChange = new Event('cueChange')
 
@@ -147,7 +149,19 @@ function loadAgenda() {
 // It processes the agenda and sets up all of the workers.
 function agendaLoaded(agenda) {
 
+   roomName = document.getElementById("roomName").value
+   if(roomName == "") {
+      return
+   }
+
+   agenda.Rooms.forEach( function(r) {
+      if r.Name == roomName {
+         roomData = r
+      }
+   })
+
+   // 
 }
 
-loadAgenda()
+window.onload = loadAgenda
 

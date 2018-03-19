@@ -72,7 +72,10 @@ func main() {
 		fmt.Printf("failed to read agenda: %s", err.Error())
 		os.Exit(1)
 	}
-	spew.Dump(a)
+
+	if debug {
+		spew.Dump(a)
+	}
 
 	// Create web server
 	e := echo.New()
@@ -121,6 +124,7 @@ func main() {
 	// Serve internal javascript files
 	e.GET("/app/*.js", echo.WrapHandler(http.FileServer(FS(false))))
 
+	// Serve user-supplied assets
 	e.Static("/js", "js")
 	e.Static("/css", "css")
 	e.Static("/media", "media")
@@ -158,7 +162,7 @@ func enterRoom(c echo.Context) error {
 	id := ctx.Param("id")
 	var r *agenda.Room
 	for _, room := range ctx.Agenda.Rooms {
-		if room.ID() == id {
+		if room.ID == id {
 			r = &room
 			break
 		}

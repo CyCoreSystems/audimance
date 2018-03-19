@@ -21,6 +21,20 @@ func New(filename string) (*Agenda, error) {
 
 	a := new(Agenda)
 	err = yaml.Unmarshal(data, a)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read YAML")
+	}
+
+	// Generate all IDs
+	for _, c := range a.Cues {
+		c.generateID()
+	}
+	for _, r := range a.Rooms {
+		r.generateIDs()
+	}
+	for _, ann := range a.Announcements {
+		ann.generateID()
+	}
 	return a, err
 }
 
@@ -55,18 +69,18 @@ func (a *Agenda) AllTracks() (out []Track) {
 
 	// Load Announcements first
 	for _, ann := range a.Announcements {
-		if unseen(ann.ID()) {
+		if unseen(ann.ID) {
 			out = append(out, ann.Track)
-			seen = append(seen, ann.ID())
+			seen = append(seen, ann.ID)
 		}
 	}
 
 	// Load tracks from Rooms next
 	for _, r := range a.Rooms {
 		for _, t := range r.AllTracks() {
-			if unseen(t.ID()) {
+			if unseen(t.ID) {
 				out = append(out, t)
-				seen = append(seen, t.ID())
+				seen = append(seen, t.ID)
 			}
 		}
 	}
@@ -77,6 +91,9 @@ func (a *Agenda) AllTracks() (out []Track) {
 // Cue describes a specific point in time, with respect to the performance
 // timeline
 type Cue struct {
+
+	// ID is the generated unique identifier
+	ID string `json:"id" yaml:"-"`
 
 	// Name is the unique, human-friendly name for this cue
 	Name string `json:"name" yaml:"name"`
@@ -90,17 +107,23 @@ type Cue struct {
 }
 
 // ID returns a unique hex ID for the cue
-func (c *Cue) ID() string {
+func (c *Cue) generateID() error {
+
 	// If we don't have a name, generate one
 	if c.Name == "" {
 		c.Name = uuid.Must(uuid.NewV1()).String()
 	}
 
-	return hashString(fmt.Sprintf("cue-%s", c.Name))
+	c.ID = hashString(fmt.Sprintf("cue-%s", c.Name))
+
+	return nil
 }
 
 // Room describes a virtual room in which audio may be played
 type Room struct {
+
+	// ID is the generated unique identifier
+	ID string `json:"id" yaml:"-"`
 
 	// Name is the unique, human-friendly name for this room
 	Name string `json:"name" yaml:"name"`
@@ -118,14 +141,32 @@ type Room struct {
 	RoomTracks []Track `json:"room_tracks" yaml:"room_tracks"`
 }
 
-// ID returns a unique hex ID for the room
-func (r *Room) ID() string {
+func (r *Room) generateIDs() error {
+
+	err := r.generateID()
+	if err != nil {
+		return err
+	}
+
+	for _, s := range r.Sources {
+		err = s.generateIDs()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (r *Room) generateID() error {
 	// If we don't have a name, generate one
 	if r.Name == "" {
 		r.Name = uuid.Must(uuid.NewV1()).String()
 	}
 
-	return hashString(fmt.Sprintf("room-%s", r.Name))
+	r.ID = hashString(fmt.Sprintf("room-%s", r.Name))
+
+	return nil
 }
 
 // AllTracks returns the list of all tracks for the room so that they may be
@@ -146,18 +187,18 @@ func (r *Room) AllTracks() (out []Track) {
 	// Iterate Sources first
 	for _, s := range r.Sources {
 		for _, t := range s.Tracks {
-			if unseen(t.ID()) {
+			if unseen(t.ID) {
 				out = append(out, t)
-				seen = append(seen, t.ID())
+				seen = append(seen, t.ID)
 			}
 		}
 	}
 
 	// Iterate RoomTracks next
 	for _, t := range r.RoomTracks {
-		if unseen(t.ID()) {
+		if unseen(t.ID) {
 			out = append(out, t)
-			seen = append(seen, t.ID())
+			seen = append(seen, t.ID)
 		}
 	}
 
@@ -166,6 +207,9 @@ func (r *Room) AllTracks() (out []Track) {
 
 // Source describes a unique audio sequence and location
 type Source struct {
+
+	// ID is the generated unique identifier
+	ID string `json:"id" yaml:"-"`
 
 	// Name is the unique, human-friendly name for this source
 	Name string `json:"name" yaml:"name"`
@@ -179,17 +223,37 @@ type Source struct {
 	Tracks []Track `json:"tracks" yaml:"tracks"`
 }
 
-// ID returns a unique hex ID for the source
-func (s *Source) ID() string {
+func (s *Source) generateIDs() error {
+	err := s.generateID()
+	if err != nil {
+		return err
+	}
+
+	for _, t := range s.Tracks {
+		err = t.generateID()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *Source) generateID() error {
 	// If we don't have a name, generate one
 	if s.Name == "" {
 		s.Name = uuid.Must(uuid.NewV1()).String()
 	}
 
-	return hashString(fmt.Sprintf("source-%s", s.Name))
+	s.ID = hashString(fmt.Sprintf("source-%s", s.Name))
+
+	return nil
 }
 
 type Track struct {
+
+	// ID is the generated unique identifier
+	ID string `json:"id" yaml:"-"`
 
 	// Cue is the unique identifier of the cue at which this track should be
 	// played
@@ -208,13 +272,15 @@ type Track struct {
 // required to be system-unique; only file-unique.  Thus the same track ID may
 // be used multiple times (to play the same file at different times or
 // locations).
-func (t *Track) ID() string {
+func (t *Track) generateID() error {
 	// If we don't have a name, generate one
 	if t.AudioFile == "" {
-		return ""
+		return errors.New("track must have a name")
 	}
 
-	return hashString(fmt.Sprintf("audio-%s", t.AudioFile))
+	t.ID = hashString(fmt.Sprintf("audio-%s", t.AudioFile))
+
+	return nil
 }
 
 // URI returns the URL of the audio file for use in the HTML audio tag.  It is
