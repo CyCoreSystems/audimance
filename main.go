@@ -1,5 +1,7 @@
 package main
 
+//go:generate esc -o static.go -ignore \.map$ app
+
 import (
 	"flag"
 	"fmt"
@@ -116,12 +118,18 @@ func main() {
 		return c.Render(200, "index.html", a)
 	})
 
-	e.Static("/app", "app")
+	// Serve internal javascript files
+	e.GET("/app/*.js", echo.WrapHandler(http.FileServer(FS(false))))
+
+	e.Static("/js", "js")
+	e.Static("/css", "css")
 	e.Static("/media", "media")
 
 	e.GET("/room/:id", enterRoom)
 
 	e.GET("/ws/performanceTime", performanceTime)
+
+	e.GET("/agenda.json", agendaJSON)
 
 	// Listen to OS kill signals
 	go func() {
@@ -135,6 +143,12 @@ func main() {
 	// Listen for connections
 	e.Logger.Debugf("listening on %s\n", addr)
 	e.Logger.Fatal(e.Start(addr))
+}
+
+func agendaJSON(c echo.Context) error {
+	ctx := c.(*CustomContext)
+
+	return ctx.JSON(200, ctx.Agenda)
 }
 
 func enterRoom(c echo.Context) error {
