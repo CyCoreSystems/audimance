@@ -221,7 +221,7 @@ function agendaLoaded(agenda) {
          // handle the _first_ time sync to make sure we know where things lie
          // if we do not have performanceTime available before we load the
          // track
-         performanceTime.addEventListener('timeSync', function(ev) {
+         performanceTime.addEventListener('timeSync', function cb(ev) {
            src.seekAndPlay()
            ev.currentTarget.removeEventListener(ev.type, cb)
          })
