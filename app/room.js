@@ -89,15 +89,28 @@ performanceTime.addEventListener('message', function(ev) {
    }
 })
 
+function debugToHTML(txt) {
+   var dbg = document.getElementById("debug")
+   if(!dbg) {
+      return
+   }
+
+   var el = document.createElement("p")
+   el.appendChild(document.createTextNode(txt))
+   document.appendChild(el)
+}
+
 // Add seekAndPlay functionality to Howls
 Howl.prototype.seekAndPlay = function() {
    var since = performanceTime.sinceCue(this.audimanceCue)
    if( since >= 0 ) {
       console.log("seeking and playing "+ this.audimanceID +" to "+ since/1000)
+      debugToHTML("seeking and playing "+ this.audimanceID +" to "+ since/1000)
       this.seek(since/1000.0)
       this.play()
    } else {
       console.log("cue "+ this.audimanceCue +" has not yet occurred")
+      debugToHTML("cue "+ this.audimanceCue +" has not yet occurred")
    }
 }
 
