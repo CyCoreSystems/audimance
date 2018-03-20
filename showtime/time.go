@@ -13,7 +13,7 @@ const subscriptionBufferSize = 5
 
 const maxUDPMessageSize = 512
 
-var minUpdateInterval = time.Duration(5) * time.Second
+var minUpdateInterval = time.Duration(2) * time.Second
 
 // Time describes the time at which the last Cue occurred
 type Time struct {

@@ -1,11 +1,10 @@
 var agenda = {}
-var activeCue = ''
-var cueOffset = 0.0
 var roomName = ''
 var room = {}
-var sources = {}
+var tracks = {}
 
 var cueChange = new Event('cueChange')
+var timeSync = new Event('timeSync')
 
 // performanceTime tracks the server-side time coordinates
 // as they are eminated from the server.
@@ -29,9 +28,9 @@ performanceTime.sinceCue = function(cueName) {
 
    var ret = -1
 
-   this.cues.forEach(function(c) {
+   performanceTime.cues.forEach(function(c) {
       if (c.cue == cueName) {
-         ret = Math.abs(now - c.at)
+         ret = now - c.at
       }
    })
 
@@ -53,6 +52,8 @@ performanceTime.addEventListener('error', function(err) {
 performanceTime.addEventListener('message', function(ev) {
    var newCue = ''
 
+   console.log("received performanceTime message from server")
+   
    // Milliseconds since UNIX epoch
    let now = Date.now()
 
@@ -76,15 +77,29 @@ performanceTime.addEventListener('message', function(ev) {
 
    })
    if (cues.length > 0) {
-      this.cues = cues
+      performanceTime.cues = cues
    }
 
    if (t.cause == "cue") {
       performanceTime.dispatchEvent(cueChange)
 
       console.log("received cue: "+ cues[cues.length-1].cue)
+   } else {
+      performanceTime.dispatchEvent(timeSync)
    }
 })
+
+// Add seekAndPlay functionality to Howls
+Howl.prototype.seekAndPlay = function() {
+   var since = performanceTime.sinceCue(this.audimanceCue)
+   if( since >= 0 ) {
+      console.log("seeking and playing "+ this.audimanceID +" to "+ since/1000)
+      this.seek(since/1000.0)
+      this.play()
+   } else {
+      console.log("cue "+ this.audimanceCue +" has not yet occurred")
+   }
+}
 
 // createEnvironment sets up a new audio context and
 // binds a new Resonance Audio Scene and Room to it
@@ -161,6 +176,10 @@ function loadAgenda() {
 // It processes the agenda and sets up all of the workers.
 function agendaLoaded(agenda) {
 
+   if(!document.getElementById("roomName")) {
+      console.log("not in a room")
+      return
+   }
    roomName = document.getElementById("roomName").value
    if(roomName == "") {
       console.log("no room")
@@ -177,6 +196,46 @@ function agendaLoaded(agenda) {
       return
    }
 
+   /* Howler.js method */
+   roomData.sources.forEach( function(s) {
+
+      s.tracks.forEach( function(track) {
+
+         var src = new Howl({
+            html5: true, // must be set for large files
+            src: ["/media/" + track.audio_file],
+            pos: [s.location.x, s.location.y, s.location.z],
+         })
+
+         // store the cue to the Howl
+         src.audimanceCue = track.cue
+
+         // store the audimance ID to the Howl so that we may reverse-index it
+         src.audimanceID = track.id
+
+         // forward index the audimance ID to the Howl
+         tracks[track.id] = src
+
+         src.seekAndPlay()
+
+         // handle the _first_ time sync to make sure we know where things lie
+         // if we do not have performanceTime available before we load the
+         // track
+         performanceTime.addEventListener('timeSync', function(ev) {
+           src.seekAndPlay()
+           ev.currentTarget.removeEventListener(ev.type, cb)
+         })
+
+         // seek and play any time we receive a cue change
+         performanceTime.addEventListener('cueChange', function() {
+            src.seekAndPlay()
+         })
+      })
+
+   })
+   
+
+   /* Resonance Audio method 
    // Set up resonance audio
    env = createEnvironment()
 
@@ -205,7 +264,9 @@ function agendaLoaded(agenda) {
       performanceTime.addEventListener('cueChange', function(ev) {
          seekAndPlay(src)
       })
+
    } )
+   */
    
 }
 
@@ -222,3 +283,4 @@ function seekAndPlay(src) {
 
 window.onload = loadAgenda
 
+console.log("hello")
