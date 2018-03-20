@@ -97,7 +97,7 @@ function debugToHTML(txt) {
 
    var el = document.createElement("p")
    el.appendChild(document.createTextNode(txt))
-   document.appendChild(el)
+   document.body.appendChild(el)
 }
 
 // Add seekAndPlay functionality to Howls
