@@ -213,6 +213,7 @@ function agendaLoaded(agenda) {
 
          var src = new Howl({
             html5: true, // must be set for large files
+            preload: false,
             src: ["/media/" + track.audio_file],
             pos: [s.location.x, s.location.y, s.location.z],
          })
