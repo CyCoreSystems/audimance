@@ -108,9 +108,6 @@ Howl.prototype.seekAndPlay = function() {
       debugToHTML("seeking and playing "+ this.audimanceID +" to "+ since/1000)
       this.seek(since/1000.0)
       this.play()
-   } else {
-      console.log("cue "+ this.audimanceCue +" has not yet occurred")
-      debugToHTML("cue "+ this.audimanceCue +" has not yet occurred")
    }
 }
 
@@ -293,6 +290,8 @@ function seekAndPlay(src) {
       console.log("cue "+ src.track.cue +" has not yet occurred")
    }
 }
+
+Howler.mobileAudioEnabled = true
 
 window.onload = loadAgenda
 
