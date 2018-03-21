@@ -60,9 +60,6 @@ class PerformanceTime extends EventEmitter3 {
       ws.addEventListener('error', function(err) {
          console.log("error receiving from server: "+ err)
          ws.close()
-         setTimeout(function() {
-            self.connectWS()
-         }, 1000)
       })
 
       ws.addEventListener('message', function(ev) {
@@ -100,7 +97,6 @@ class PerformanceTime extends EventEmitter3 {
       })
    }
 }
-
 
 function debugToHTML(txt) {
    var dbg = document.getElementById("debug")
@@ -143,7 +139,7 @@ function loadAgenda() {
 // agendaLoaded is called when the program agenda has been loaded from the server.
 // It processes the agenda and sets up all of the workers.
 function agendaLoaded(agenda) {
-   document.getElementById("loadStatus").innerHTML = "loaded"
+   button.innerHTML = "play"
    button.disabled = false
 }
 
@@ -221,15 +217,43 @@ function seekAndPlay(src) {
 
 Howler.mobileAudioEnabled = true
 
+var audioLoaded = false
+
 var button = document.getElementById("playButton")
 button.addEventListener("click", function cb(ev) {
-   loadAudio()
+      // First press enables audio
+      audioLoaded = true
+      loadAudio()
+      button.innerHTML = "playing"
+
+   window.addEventListener('click', function(ev) {
+      // normalize the coordinates to 100x100
+      var x = 100 * (ev.clientX / window.outerWidth)
+      var y = 100 * (ev.clientY / window.outerHeight)
+
+      // Subsequent presses change the listener position
+      console.log("changing listener position to: " + x + "("+ ev.clientX +")," + y +"("+ev.clientY+")")
+      Howler.pos(x,y)
+   })
+
+
    ev.currentTarget.removeEventListener(ev.type, cb)
-   button.innerHTML = "playing"
-   button.disabled = true
+   //button.disabled = true
 })
 
 performanceTime = new PerformanceTime()
 
 window.onload = loadAgenda
 
+// Size the clickable area
+{
+   var el = document.getElementById("playButton")
+
+   el.width = window.outerWidth
+   el.height = window.outerHeight
+
+   window.addEventListener('resize', function(ev) {
+      el.width = window.outerWidth
+      el.height = window.outerHeight
+   })
+}
