@@ -228,8 +228,8 @@ button.addEventListener("click", function cb(ev) {
 
    window.addEventListener('click', function(ev) {
       // normalize the coordinates to 100x100
-      var x = 100 * (ev.clientX / window.outerWidth)
-      var y = 100 * (ev.clientY / window.outerHeight)
+      var x = 100 * (ev.clientX / window.innerWidth)
+      var y = 100 * (ev.clientY / window.innerHeight)
 
       // Subsequent presses change the listener position
       console.log("changing listener position to: " + x + "("+ ev.clientX +")," + y +"("+ev.clientY+")")
@@ -249,11 +249,11 @@ window.onload = loadAgenda
 {
    var el = document.getElementById("playButton")
 
-   el.width = window.outerWidth
-   el.height = window.outerHeight
+   el.width = window.innerWidth
+   el.height = window.innerHeight
 
    window.addEventListener('resize', function(ev) {
-      el.width = window.outerWidth
-      el.height = window.outerHeight
+      el.width = window.innerWidth
+      el.height = window.innerHeight
    })
 }
