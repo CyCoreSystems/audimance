@@ -111,13 +111,36 @@ function debugToHTML(txt) {
 
 // Add seekAndPlay functionality to Howls
 Howl.prototype.seekAndPlay = function() {
-   var since = performanceTime.sinceCue(this.audimanceCue)
-   if( since >= 0 ) {
-      console.log("seeking and playing "+ this.audimanceID +" to "+ since/1000)
-      debugToHTML("seeking and playing "+ this.audimanceID +" to "+ since/1000)
-      this.seek(since/1000.0)
-      this.play()
+
+   // No-op if it our cue has not been called
+   if( performanceTime.sinceCue(this.audimanceCue) < 0) {
+      return
    }
+
+   var self = this
+   var ts = Date.now()
+
+   if(self.state() == "loaded") {
+      self._seekAndPlay()
+      return
+   }
+
+   if(self.state() == "unloaded") {
+      console.log("loading "+ self.audimanceID)
+      self.load()
+
+   }
+
+   return
+
+}
+
+Howl.prototype._seekAndPlay = function() {
+   var since = performanceTime.sinceCue(this.audimanceCue)
+   console.log("seeking and playing "+ this.audimanceID +" to "+ since/1000)
+   debugToHTML("seeking and playing "+ this.audimanceID +" to "+ since/1000)
+   this.seek(since/1000.0)
+   this.play()
 }
 
 // loadAgenda loads the performance Agenda and executed
@@ -171,11 +194,20 @@ function loadAudio() {
       s.tracks.forEach( function(track) {
 
          var src = new Howl({
-            html5: true, // must be set for large files
+            html5: false, // must be set for large files
             preload: false,
             src: ["/media/" + track.audio_file],
             pos: [s.location.x, s.location.y, s.location.z],
+            panningModel: 'HRTF',
+            refDistance: 1,
+            maxDistance: 90,
+            rolloffFactor: 1,
+            distanceModel: 'linear',
+            onload: function() {
+               this.seekAndPlay()
+            },
          })
+
 
          // store the cue to the Howl
          src.audimanceCue = track.cue
@@ -185,8 +217,6 @@ function loadAudio() {
 
          // forward index the audimance ID to the Howl
          tracks[track.id] = src
-
-         src.seekAndPlay()
 
          // handle the _first_ time sync to make sure we know where things lie
          // if we do not have performanceTime available before we load the
@@ -202,17 +232,6 @@ function loadAudio() {
       })
 
    })
-}
-
-function seekAndPlay(src) {
-   var since = performanceTime.sinceCue(src.track.cue)
-   if( since >= 0 ) {
-      console.log("seeking and playing "+ src.el.id +" to "+ since/1000)
-      src.el.currentTime = since/1000.0
-      src.el.play()
-   } else {
-      console.log("cue "+ src.track.cue +" has not yet occurred")
-   }
 }
 
 Howler.mobileAudioEnabled = true
@@ -233,7 +252,7 @@ button.addEventListener("click", function cb(ev) {
 
       // Subsequent presses change the listener position
       console.log("changing listener position to: " + x + "("+ ev.clientX +")," + y +"("+ev.clientY+")")
-      Howler.pos(x,y)
+      Howler.pos(x,y,1)
    })
 
 
