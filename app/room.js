@@ -88,8 +88,7 @@ class PerformanceTime extends EventEmitter3 {
          }
 
          if (t.cause == "cue") {
-            self.emit("cueChange")
-
+            self.emit(cues[cues.length-1].cue)
             console.log("received cue: "+ cues[cues.length-1].cue)
          } else {
             self.emit("timeSync")
@@ -111,13 +110,27 @@ function debugToHTML(txt) {
 
 // Add seekAndPlay functionality to Howls
 Howl.prototype.seekAndPlay = function() {
+   var self = this
+
+   if( self.audimanceLoadCue && performanceTime.sinceCue(self.audimanceLoadCue) >= 0) {
+      if(self.state() == "unloaded") {
+         console.log("loading "+ self.audimanceID)
+         self.load()
+         return // seekAndPlay will be called when load is complete
+      }
+   }
 
    // No-op if it our cue has not been called
-   if( performanceTime.sinceCue(this.audimanceCue) < 0) {
+   if( performanceTime.sinceCue(self.audimanceCue) < 0) {
       return
    }
 
-   var self = this
+   // Stop and unload if we have hit the kill cue
+   if( self.audimanceKillCue && performanceTime.sinceCue(self.audimanceKillCue) >= 0) {
+      self.unload()
+      return
+   }
+
    var ts = Date.now()
 
    if(self.state() == "loaded") {
@@ -128,11 +141,9 @@ Howl.prototype.seekAndPlay = function() {
    if(self.state() == "unloaded") {
       console.log("loading "+ self.audimanceID)
       self.load()
-
    }
 
    return
-
 }
 
 Howl.prototype._seekAndPlay = function() {
@@ -193,10 +204,15 @@ function loadAudio() {
 
       s.tracks.forEach( function(track) {
 
+         var urls = []
+         track.audio_files.forEach(function(u) {
+            urls.push("/media/"+ u)
+         })
+
          var src = new Howl({
             html5: false, // must be set for large files
             preload: false,
-            src: ["/media/" + track.audio_file],
+            src: urls,
             pos: [s.location.x, s.location.y, s.location.z],
             panningModel: 'HRTF',
             refDistance: 1,
@@ -204,7 +220,7 @@ function loadAudio() {
             rolloffFactor: 1,
             distanceModel: 'linear',
             onload: function() {
-               this.seekAndPlay()
+               this.seekAndPlay() // safety check, in case of long load delay
             },
          })
 
@@ -221,12 +237,25 @@ function loadAudio() {
          // handle the _first_ time sync to make sure we know where things lie
          // if we do not have performanceTime available before we load the
          // track
-         performanceTime.once('timeSync', function cb(ev) {
+         performanceTime.once('timeSync', function() {
            src.seekAndPlay()
          })
 
-         // seek and play any time we receive a cue change
-         performanceTime.on('cueChange', function() {
+         if(track.kill_cue && track.kill_cue != '') {
+            src.audimanceKillCue = track.kill_cue
+            performanceTime.once(track.kill_cue, function() {
+               src.unload()
+            })
+         }
+
+         if(track.load_cue && track.load_cue != '') {
+            src.audimanceLoadCue = track.load_cue
+            performanceTime.once(track.load_cue, function() {
+               src.load()
+            })
+         }
+         // seek and play when we receive the play cue
+         performanceTime.on(track.cue, function() {
             src.seekAndPlay()
          })
       })
@@ -276,3 +305,12 @@ window.onload = loadAgenda
       el.height = window.innerHeight
    })
 }
+
+// FIXME:  HACK***HACK***HACK
+// There is an audio context bug in (at least) Chrome which causes the audio
+// context to not release audio files from RAM even after they are stopped and
+// unloaded.  As a workaround, we reload the page to reset the web audio
+// context.
+performanceTime.on('INT-5 min warning', function() {
+   window.location.reload(false)
+})

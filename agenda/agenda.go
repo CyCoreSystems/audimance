@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
-	"path"
 
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
@@ -255,13 +254,22 @@ type Track struct {
 	// ID is the generated unique identifier
 	ID string `json:"id" yaml:"-"`
 
+   // LoadCue indicates the cue at which the track should be loaded.  This will generally be the cue immediately preceding the Cue
+   LoadCue string `json:"load_cue" yaml:"load_cue"`
+
+   // LoadWindow indicates the amount of time (in seconds) to allow for the random loading of the audio.  Tracks are loaded at random times between LoadCue's trigger and LoadWindow's duration therefrom to prevent a thundering herd.
+   LoadWindow float64 `json:"load_window" yaml:"load_window"`
+
 	// Cue is the unique identifier of the cue at which this track should be
 	// played
 	Cue string `json:"cue" yaml:"cue"`
 
+   // KillCue indicates the cue at which the track should be killed whether it has finished or not
+   KillCue string  `json:"kill_cue" yaml:"kill_cue"`
+
 	// AudioFile is the user-supplied location of the audio file, relative to
 	// the filesystem `media/` directory
-	AudioFile string `json:"audio_file" yaml:"audio_file"`
+	AudioFiles []string `json:"audio_files" yaml:"audio_files"`
 
 	// Repeat indicates whether the PlaySet should be repeated after it is
 	// completed.  This will cause the PlaySet to be continually played.
@@ -274,24 +282,13 @@ type Track struct {
 // locations).
 func (t *Track) generateID() error {
 	// If we don't have a name, generate one
-	if t.AudioFile == "" {
+	if len(t.AudioFiles) < 1 {
 		return errors.New("track must have a name")
 	}
 
-	t.ID = hashString(fmt.Sprintf("audio-%s", t.AudioFile))
+	t.ID = hashString(fmt.Sprintf("audio-%s", t.AudioFiles[0]))
 
 	return nil
-}
-
-// URI returns the URL of the audio file for use in the HTML audio tag.  It is
-// generated from the AudioFile property.
-func (t *Track) URI() string {
-	// If we don't have a name, generate one
-	if t.AudioFile == "" {
-		return ""
-	}
-
-	return path.Join("/media", t.AudioFile)
 }
 
 // Point is a 3-dimensional point in space
