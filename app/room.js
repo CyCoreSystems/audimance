@@ -117,6 +117,12 @@ function debugToHTML(txt) {
 Howl.prototype.seekAndPlay = function() {
    var self = this
 
+   // Stop and unload if we have hit the kill cue
+   if( self.audimanceKillCue && performanceTime.sinceCue(self.audimanceKillCue) >= 0) {
+      self.unload()
+      return
+   }
+
    if( self.audimanceLoadCue && performanceTime.sinceCue(self.audimanceLoadCue) >= 0) {
       if(self.state() == "unloaded") {
          console.log("loading "+ self.audimanceID)
@@ -127,12 +133,6 @@ Howl.prototype.seekAndPlay = function() {
 
    // No-op if it our cue has not been called
    if( performanceTime.sinceCue(self.audimanceCue) < 0) {
-      return
-   }
-
-   // Stop and unload if we have hit the kill cue
-   if( self.audimanceKillCue && performanceTime.sinceCue(self.audimanceKillCue) >= 0) {
-      self.unload()
       return
    }
 
