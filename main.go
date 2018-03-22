@@ -148,7 +148,7 @@ func main() {
    // If we have TLS assets, start the TLS server
    if certFile != "" && keyFile != "" {
       e.Logger.Debug("listening on 443")
-      go e.Logger.Fatal(e.StartTLS(":443", certFile, keyFile))
+      e.Logger.Fatal(e.StartTLS(":443", certFile, keyFile))
    }
    
 	// Listen for connections

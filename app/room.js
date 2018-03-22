@@ -44,7 +44,12 @@ class PerformanceTime extends EventEmitter3 {
       var self = this
 
       console.log("connecting to server")
-      var ws = new WebSocket("ws://"+ location.host +'/ws/performanceTime')
+      var ws = {}
+      if(window.location.protocol =="https:") {
+         ws = new WebSocket("wss://"+ location.host +'/ws/performanceTime')
+      } else{
+         ws = new WebSocket("ws://"+ location.host +'/ws/performanceTime')
+      }
 
       ws.addEventListener('open', function(ev) {
          console.log("connected to server")
