@@ -14,7 +14,6 @@ import (
 
 	"github.com/CyCoreSystems/audimance/agenda"
 	"github.com/CyCoreSystems/audimance/showtime"
-	"github.com/boltdb/bolt"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
@@ -23,8 +22,8 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-var dbFile = "/var/db/ringfree/ipc.db"
-var db *bolt.DB
+var keyFile string
+var certFile string
 
 // addr is the listen address
 var addr string
@@ -60,6 +59,8 @@ type CustomContext struct {
 func init() {
 	flag.StringVar(&addr, "addr", ":9000", "TCP Address on which to listen for web requests")
 	flag.StringVar(&qlabAddr, "qlab", ":9001", "UDP Address on which to listen for QLab cues")
+	flag.StringVar(&keyFile, "key", "", "TLS key")
+	flag.StringVar(&certFile, "cert", "", "TLS certificate")
 	flag.BoolVar(&debug, "debug", false, "enable debug logging")
 }
 
@@ -144,6 +145,12 @@ func main() {
 		os.Exit(100)
 	}()
 
+   // If we have TLS assets, start the TLS server
+   if certFile != "" && keyFile != "" {
+      e.Logger.Debug("listening on 443")
+      go e.Logger.Fatal(e.StartTLS(":443", certFile, keyFile))
+   }
+   
 	// Listen for connections
 	e.Logger.Debugf("listening on %s\n", addr)
 	e.Logger.Fatal(e.Start(addr))
