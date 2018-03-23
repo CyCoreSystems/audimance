@@ -131,6 +131,7 @@ func main() {
 	e.Static("/media", "media")
 
 	e.GET("/room/:id", enterRoom)
+	e.GET("/tracks/:id", roomTracks)
 
 	e.GET("/ws/performanceTime", performanceTime)
 
@@ -186,7 +187,34 @@ func enterRoom(c echo.Context) error {
 		Room:          r,
 	}
 
-	return ctx.Render(200, "room.html", data) // TODO: template linking itself
+	return ctx.Render(200, "room.html", data)
+}
+
+func roomTracks(c echo.Context) error {
+	ctx := c.(*CustomContext)
+
+	// Find our room
+	id := ctx.Param("id")
+	var r *agenda.Room
+	for _, room := range ctx.Agenda.Rooms {
+		if room.ID == id {
+			r = room
+			break
+		}
+	}
+	if r == nil {
+		return ctx.String(http.StatusNotFound, "no such room")
+	}
+
+	data := struct {
+		Announcements []*agenda.Announcement `json:"announcements"`
+		Room          *agenda.Room           `json:"room"`
+	}{
+		Announcements: ctx.Agenda.Announcements,
+		Room:          r,
+	}
+
+	return ctx.Render(200, "tracks.html", data)
 }
 
 func performanceTime(c echo.Context) error {

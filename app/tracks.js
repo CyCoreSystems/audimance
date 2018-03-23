@@ -3,17 +3,43 @@ var roomName = ''
 var room = {}
 var tracks = {}
 var performanceTime = {}
+var startCue = 'Top of Act 1'
+var audioActivated = false
+var audioSuspended = false
 
-function debugToHTML(txt) {
-   var dbg = document.getElementById("debug")
-   if(!dbg) {
-      return
+// Add the activation sound
+var activationSound = new Howl({
+   html5: false,
+   preload: true,
+   src: ['/media/activate.mp3'],
+})
+
+
+function mostRecentCue()
+
+/*
+class Track extends Howl {
+   constructor(trackOpts, perfTime) {
+
+      var urls = []
+      trackOpts.audio_files.forEach(function(u) {
+         urls.push("/media/"+u)
+      })
+
+      // Create the underlying Howl
+      super({
+         html5: false,
+         preload: false,
+         src: urls,
+         pos: []
+      })
+
+      this.performanceTime = perfTime
+
+
    }
-
-   var el = document.createElement("p")
-   el.appendChild(document.createTextNode(txt))
-   document.body.appendChild(el)
 }
+*/
 
 // Add seekAndPlay functionality to Howls
 Howl.prototype.seekAndPlay = function() {
@@ -38,50 +64,19 @@ Howl.prototype.seekAndPlay = function() {
       return
    }
 
-   var ts = Date.now()
-
-   if(self.state() == "loaded") {
-      self._seekAndPlay()
-      return
-   }
-
-   if(self.state() == "unloaded") {
-      console.log("loading "+ self.audimanceID)
-      self.load()
-   }
-
-   return
+   self._seekAndPlay()
 }
 
 Howl.prototype._seekAndPlay = function() {
+   if(!audioActivated) {
+      return
+   }
    var since = performanceTime.sinceCue(this.audimanceCue)
    console.log("seeking and playing "+ this.audimanceID +" to "+ since/1000)
-   debugToHTML("seeking and playing "+ this.audimanceID +" to "+ since/1000)
    this.seek(since/1000.0)
-   this.play()
-}
-
-// loadAgenda loads the performance Agenda and executed
-// agendaLoaded() after it is retrieved
-function loadAgenda() {
-
-   fetch('/agenda.json')
-   .then(function(resp) {
-      return resp.json();
-   })
-   .then(function(j) {
-
-      agenda = j
-      agendaLoaded(j)
-
-   })
-}
-
-// agendaLoaded is called when the program agenda has been loaded from the server.
-// It processes the agenda and sets up all of the workers.
-function agendaLoaded(agenda) {
-   button.innerHTML = "play"
-   button.disabled = false
+   //if(!this.playing()) {
+      this.play()
+   //}
 }
 
 function loadAudio() {
@@ -117,15 +112,9 @@ function loadAudio() {
          })
 
          var src = new Howl({
-            html5: false, // must be set for large files
+            html5: true, // must be set for large files
             preload: false,
             src: urls,
-            pos: [s.location.x, s.location.y, s.location.z],
-            panningModel: 'HRTF',
-            refDistance: 1,
-            maxDistance: 90,
-            rolloffFactor: 1,
-            distanceModel: 'linear',
             onload: function() {
                this.seekAndPlay() // safety check, in case of long load delay
             },
@@ -148,70 +137,107 @@ function loadAudio() {
            src.seekAndPlay()
          })
 
+         // start playing when audio activation occurs
+         performanceTime.once('audioActive', function() {
+            src.seekAndPlay()
+         })
+
          if(track.kill_cue && track.kill_cue != '') {
             src.audimanceKillCue = track.kill_cue
             performanceTime.once(track.kill_cue, function() {
-               src.unload()
+               src.seekAndPlay()
             })
          }
 
          if(track.load_cue && track.load_cue != '') {
             src.audimanceLoadCue = track.load_cue
             performanceTime.once(track.load_cue, function() {
-               src.load()
+               src.seekAndPlay()
             })
          }
+
          // seek and play when we receive the play cue
          performanceTime.on(track.cue, function() {
             src.seekAndPlay()
          })
+
+         // bind toggles
+         document.getElementById(s.id).addEventListener('change', function(ev) {
+            src.mute(!ev.currentTarget.checked)
+         })
+      })
+   })
+}
+
+// agendaLoaded is called when the program agenda has been loaded from the server.
+// It processes the agenda and sets up all of the workers.
+function agendaLoaded(agenda) {
+   var button = document.getElementById("play")
+
+   button.innerHTML = "Loading Audio"
+
+   loadAudio()
+
+   button.innerHTML = "Press to Play"
+   button.disabled = false
+
+   button.addEventListener("click", function cb(ev) {
+      //ev.currentTarget.removeEventListener(ev.type, cb)
+
+      if(!audioSuspended) {
+         audioSuspended = true
+         Howler.ctx.suspend()
+         button.innerHTML = "Press to Play"
+         return
+      } else {
+         audioSuspended = false
+         Howler.ctx.resume()
+      }
+
+      if(!audioActivated) {
+         activationSound.play()
+         audioActivated = true
+         performanceTime.emit('audioActive')
+      }
+
+      // Check to see if performance has started
+      if(performanceTime.sinceCue(startCue) >= 0) {
+         button.innerHTML = "playing..."
+         return
+      }
+
+      button.innerHTML = "Waiting for Performance"
+
+      performanceTime.on('timeSync', function cb() {
+         if(performanceTime.sinceCue(startCue) < 0) {
+            return
+         }
+         button.innerHTML = "playing..."
+         performanceTime.off('timeSync', cb)
       })
 
    })
 }
 
-Howler.mobileAudioEnabled = true
+// loadAgenda loads the performance Agenda and executed
+// agendaLoaded() after it is retrieved
+function loadAgenda() {
 
-var audioLoaded = false
-
-var button = document.getElementById("playButton")
-button.addEventListener("click", function cb(ev) {
-      // First press enables audio
-      audioLoaded = true
-      loadAudio()
-      button.innerHTML = "playing"
-
-   window.addEventListener('click', function(ev) {
-      // normalize the coordinates to 100x100
-      var x = 100 * (ev.clientX / window.innerWidth)
-      var y = 100 * (ev.clientY / window.innerHeight)
-
-      // Subsequent presses change the listener position
-      console.log("changing listener position to: " + x + "("+ ev.clientX +")," + y +"("+ev.clientY+")")
-      Howler.pos(x,y,1)
+   fetch('/agenda.json')
+   .then(function(resp) {
+      return resp.json();
    })
+   .then(function(j) {
 
+      agenda = j
+      agendaLoaded(j)
 
-   ev.currentTarget.removeEventListener(ev.type, cb)
-   //button.disabled = true
-})
+   })
+}
 
 performanceTime = new PerformanceTime()
 
 window.onload = loadAgenda
-
-// Size the clickable area
-{
-   var el = document.getElementById("playButton")
-
-   el.width = window.innerWidth
-   el.height = window.innerHeight
-
-   window.addEventListener('resize', function(ev) {
-      el.width = window.innerWidth
-      el.height = window.innerHeight
-   })
-}
 
 // FIXME:  HACK***HACK***HACK
 // There is an audio context bug in (at least) Chrome which causes the audio
