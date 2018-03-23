@@ -15,8 +15,6 @@ var activationSound = new Howl({
 })
 
 
-function mostRecentCue()
-
 /*
 class Track extends Howl {
    constructor(trackOpts, perfTime) {
@@ -104,68 +102,52 @@ function loadAudio() {
    /* Howler.js method */
    roomData.sources.forEach( function(s) {
 
+      var el = document.getElementById('audio-'+s.id)
+
+      // Always seek when play is resumed
+      el.addEventListener('play', function(ev) {
+         var latestCuedTrack = null
+
+         s.tracks.forEach( function(track) {
+            if(performanceTime.sinceCue(track.cue) >= 0) {
+               latestCuedTrack = track
+            }
+         })
+         
+         if(latestCuedTrack !== null) {
+            el.src = '/media/' + track.audio_files[1]
+            el.loop = false
+            el.currentTime = performanceTime.sinceCue(track.cue)
+         }
+      })
+
+      var latestCuedTrack = null
       s.tracks.forEach( function(track) {
 
-         var urls = []
-         track.audio_files.forEach(function(u) {
-            urls.push("/media/"+ u)
-         })
-
-         var src = new Howl({
-            html5: true, // must be set for large files
-            preload: false,
-            src: urls,
-            onload: function() {
-               this.seekAndPlay() // safety check, in case of long load delay
-            },
-         })
-
-
-         // store the cue to the Howl
-         src.audimanceCue = track.cue
-
-         // store the audimance ID to the Howl so that we may reverse-index it
-         src.audimanceID = track.id
-
-         // forward index the audimance ID to the Howl
-         tracks[track.id] = src
-
-         // handle the _first_ time sync to make sure we know where things lie
-         // if we do not have performanceTime available before we load the
-         // track
-         performanceTime.once('timeSync', function() {
-           src.seekAndPlay()
-         })
-
-         // start playing when audio activation occurs
-         performanceTime.once('audioActive', function() {
-            src.seekAndPlay()
-         })
-
-         if(track.kill_cue && track.kill_cue != '') {
-            src.audimanceKillCue = track.kill_cue
-            performanceTime.once(track.kill_cue, function() {
-               src.seekAndPlay()
-            })
-         }
-
-         if(track.load_cue && track.load_cue != '') {
-            src.audimanceLoadCue = track.load_cue
-            performanceTime.once(track.load_cue, function() {
-               src.seekAndPlay()
-            })
-         }
-
-         // seek and play when we receive the play cue
          performanceTime.on(track.cue, function() {
-            src.seekAndPlay()
+            el.src = '/media/'+ track.audio_files[1]
+            el.loop = false
+            el.currentTime = 0
+            el.play()
          })
+
+         if(performanceTime.sinceCue(track.cue) >= 0) {
+            latestCuedTrack = track
+         }
+      })
+
+      if(latestCuedTrack !== null) {
+         el.src = track.audio_files[1]
+         el.loop = false
+         el.currentTime = performanceTime.sinceCue(latestCuedTrack.cue)
+         el.play()
+      }
 
          // bind toggles
-         document.getElementById(s.id).addEventListener('change', function(ev) {
-            src.mute(!ev.currentTarget.checked)
-         })
-      })
+ //        document.getElementById(s.id).addEventListener('change', function(ev) {
+//            src.mute(!ev.currentTarget.checked)
+ //        })
+ //     })
    })
 }
 
@@ -173,8 +155,6 @@ function loadAudio() {
 // It processes the agenda and sets up all of the workers.
 function agendaLoaded(agenda) {
    var button = document.getElementById("play")
-
-   button.innerHTML = "Loading Audio"
 
    loadAudio()
 
