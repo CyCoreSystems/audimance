@@ -102,7 +102,17 @@ function loadAudio() {
    /* Howler.js method */
    roomData.sources.forEach( function(s) {
 
+      var input = document.getElementById(s.id)
+
       var el = document.getElementById('audio-'+s.id)
+
+      input.addEventListener('change', function(ev) {
+         if(input.checked) {
+            el.play()
+         } else {
+            el.pause()
+         }
+      })
 
       // Always seek when play is resumed
       el.addEventListener('play', function(ev) {
@@ -115,9 +125,9 @@ function loadAudio() {
          })
          
          if(latestCuedTrack !== null) {
-            el.src = '/media/' + track.audio_files[1]
+            el.src = '/media/' + lastCuesTrack.audio_files[1]
             el.loop = false
-            el.currentTime = performanceTime.sinceCue(track.cue)
+            el.currentTime = performanceTime.sinceCue(lastCuesTrack.cue)
          }
       })
 
