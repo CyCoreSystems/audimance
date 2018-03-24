@@ -1,4 +1,4 @@
-var performanceURL = 'https://live.kineticlight.org/room/8084a0953a687e398b34db0d4f711204'
+var performanceURL = 'https://live.kineticlight.org/live'
 
 performanceTime = new PerformanceTime()
 

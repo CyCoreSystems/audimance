@@ -130,6 +130,7 @@ func main() {
 	e.Static("/css", "css")
 	e.Static("/media", "media")
 
+	e.GET("/live", live)
 	e.GET("/room/:id", enterRoom)
 	e.GET("/tracks/:id", roomTracks)
 
@@ -188,6 +189,10 @@ func enterRoom(c echo.Context) error {
 	}
 
 	return ctx.Render(200, "room.html", data)
+}
+
+func live(c echo.Context) error {
+   return c.Render(200, "live.html", nil)
 }
 
 func roomTracks(c echo.Context) error {
