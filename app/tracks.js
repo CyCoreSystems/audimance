@@ -122,8 +122,11 @@ function loadAudio() {
             return
          }
 
-         el.volume = 1.0
-         el.play()
+         // Last check: make sure we are still enabled
+         if(input.checked) {
+            el.volume = 1.0
+            el.play()
+         }
 
          return
       })
