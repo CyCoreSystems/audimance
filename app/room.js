@@ -55,9 +55,9 @@ Howl.prototype.seekAndPlay = function() {
 
 Howl.prototype._seekAndPlay = function() {
    var since = performanceTime.sinceCue(this.audimanceCue)
-   console.log("seeking and playing "+ this.audimanceID +" to "+ since/1000)
-   debugToHTML("seeking and playing "+ this.audimanceID +" to "+ since/1000)
-   this.seek(since/1000.0)
+   console.log("seeking and playing "+ this.audimanceID +" to "+ since)
+   debugToHTML("seeking and playing "+ this.audimanceID +" to "+ since)
+   this.seek(since)
    this.play()
 }
 

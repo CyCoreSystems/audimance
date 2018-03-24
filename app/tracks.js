@@ -4,77 +4,21 @@ var room = {}
 var tracks = {}
 var performanceTime = {}
 var startCue = 'Top of Act 1'
-var audioActivated = false
-var audioSuspended = false
+var SyncTolerance = 3.0 // sec
+var WakeCheckInterval = 6000.0 // ms
 
-// Add the activation sound
-var activationSound = new Howl({
-   html5: false,
-   preload: true,
-   src: ['/media/activate.mp3'],
-})
-
-
-/*
-class Track extends Howl {
-   constructor(trackOpts, perfTime) {
-
-      var urls = []
-      trackOpts.audio_files.forEach(function(u) {
-         urls.push("/media/"+u)
-      })
-
-      // Create the underlying Howl
-      super({
-         html5: false,
-         preload: false,
-         src: urls,
-         pos: []
-      })
-
-      this.performanceTime = perfTime
-
-
-   }
-}
-*/
-
-// Add seekAndPlay functionality to Howls
-Howl.prototype.seekAndPlay = function() {
-   var self = this
-
-   // Stop and unload if we have hit the kill cue
-   if( self.audimanceKillCue && performanceTime.sinceCue(self.audimanceKillCue) >= 0) {
-      self.unload()
-      return
-   }
-
-   if( self.audimanceLoadCue && performanceTime.sinceCue(self.audimanceLoadCue) >= 0) {
-      if(self.state() == "unloaded") {
-         console.log("loading "+ self.audimanceID)
-         self.load()
-         return // seekAndPlay will be called when load is complete
+function getLatestCuedTrack(s) {
+   var latestCuedTrack = null
+   s.tracks.forEach(function(track) {
+      if(performanceTime.sinceCue(track.cue) >= 0) {
+         latestCuedTrack = track
       }
-   }
-
-   // No-op if it our cue has not been called
-   if( performanceTime.sinceCue(self.audimanceCue) < 0) {
-      return
-   }
-
-   self._seekAndPlay()
+   })
+   return latestCuedTrack
 }
 
-Howl.prototype._seekAndPlay = function() {
-   if(!audioActivated) {
-      return
-   }
-   var since = performanceTime.sinceCue(this.audimanceCue)
-   console.log("seeking and playing "+ this.audimanceID +" to "+ since/1000)
-   this.seek(since/1000.0)
-   //if(!this.playing()) {
-      this.play()
-   //}
+function urlFor(t) {
+   return '/media/'+ t.audio_files[1]
 }
 
 function loadAudio() {
@@ -106,52 +50,166 @@ function loadAudio() {
 
       var el = document.getElementById('audio-'+s.id)
 
-      input.addEventListener('change', function(ev) {
-         if(input.checked) {
-            el.play()
-         } else {
-            el.pause()
+      function resync() {
+         var track = getLatestCuedTrack(s)
+         if(!track) {
+            console.log("no latest cued track")
+            return
          }
-      })
 
-      // Always seek when play is resumed
-      el.addEventListener('play', function(ev) {
-         var latestCuedTrack = null
-
-         s.tracks.forEach( function(track) {
-            if(performanceTime.sinceCue(track.cue) >= 0) {
-               latestCuedTrack = track
-            }
-         })
-         
-         if(latestCuedTrack !== null) {
-            el.src = '/media/' + lastCuesTrack.audio_files[1]
-            el.loop = false
-            el.currentTime = performanceTime.sinceCue(lastCuesTrack.cue)
+         var now = performanceTime.sinceCue(track.cue)
+         if(now < 0) {
+            console.log("no latest cue")
+            return
          }
-      })
 
-      var latestCuedTrack = null
-      s.tracks.forEach( function(track) {
+         var diff = Math.abs(now - el.currentTime)
 
-         performanceTime.on(track.cue, function() {
-            el.src = '/media/'+ track.audio_files[1]
-            el.loop = false
-            el.currentTime = 0
-            el.play()
-         })
-
-         if(performanceTime.sinceCue(track.cue) >= 0) {
-            latestCuedTrack = track
+         if(diff > SyncTolerance) {
+            console.log("out of sync; reseeking.  Diff: " + diff)
+            el.volume = 0
+            el.currentTime = now
+            return
          }
-      })
 
-      if(latestCuedTrack !== null) {
-         el.src = track.audio_files[1]
-         el.loop = false
-         el.currentTime = performanceTime.sinceCue(latestCuedTrack.cue)
-         el.play()
+         console.log("already synced")
       }
+
+      // Handle wake up resync by resetting source and position
+      var lastSync = Date.now()
+      performanceTime.on('timeSync', function() {
+         var diff = Math.abs(Date.now() - lastSync)
+         lastSync = Date.now()
+
+         if( diff < WakeCheckInterval) {
+            return
+         }
+         
+         // wake from sleep resync
+         console.log("resyncing from sleep")
+         
+         // check the source first
+         var track = getLatestCuedTrack(s)
+         if(el.src != urlFor(track)) {
+            console.log("cued track has changed")
+            el.volume = 0
+            el.src = urlFor(track)
+            el.load()
+            return
+         }
+
+         // resync if necessary
+         resync()
+
+         return
+      })
+
+      el.addEventListener('play', function(ev) {
+         console.log("resumed")
+         resync()
+         return
+      })
+
+      el.addEventListener('seeked', function(ev) {
+         console.log('seeked')
+
+         var now = performanceTime.sinceCue(getLatestCuedTrack(s).cue)
+
+         var diff = Math.abs(now - el.currentTime)
+
+         if(diff > SyncTolerance) {
+            console.log("out of sync; ignoring.  Diff: " + diff)
+            return
+         }
+
+         el.volume = 1.0
+         el.play()
+
+         return
+      })
+
+      el.addEventListener('progress', function(ev) {
+
+         var now = performanceTime.sinceCue(getLatestCuedTrack(s).cue)
+         
+         // Check to see if we have the chunk we need
+         for(i=0; i<el.buffered.length; i++) {
+            if(el.buffered.start(i) > now) {
+               // segment starts after our interesting time
+               console.log("start is too late")
+               continue
+            }
+            if(el.buffered.end(i) < now) {
+               // buffer not long enough
+               console.log("end is too early")
+               continue
+            }
+
+            // We are far enough; play what we have
+            console.log("enough data; seeking")
+            el.currentTime = now
+
+            return
+         }
+         console.log("not enough data; waiting")
+
+         return
+      })
+
+      el.addEventListener('loadedmetadata', function(ev) {
+         console.log("loaded metadata")
+         resync()
+         return
+      })
+
+      console.log("adding event listener to change: ", s.id)
+      input.addEventListener('change', function(ev) {
+
+         console.log("input change: ", input.checked)
+
+         el.pause()
+
+         if(input.checked) {
+
+            var track = getLatestCuedTrack(s)
+            if(track) {
+               console.log("setting source")
+               el.src = urlFor(track)
+            } else {
+               console.log("no latest-cued track")
+            }
+
+            el.volume = 0
+            el.load()
+
+         } else {
+            console.log("ignoring non-set source")
+         }
+
+         return
+      })
+
+      performanceTime.on('cueChange', function cb() {
+
+         console.log("cue change")
+         el.volume = 0
+
+         if(input.checked) {
+            var track = getLatestCuedTrack(s)
+            if(track) {
+               console.log("setting source")
+               el.src = urlFor(track)
+               el.load()
+            } else {
+               console.log("no latest-cued track")
+            }
+         } else {
+            console.log("ignoring unset source")
+         }
+
+         return
+      })
+
 
          // bind toggles
  //        document.getElementById(s.id).addEventListener('change', function(ev) {
@@ -166,46 +224,19 @@ function loadAudio() {
 function agendaLoaded(agenda) {
    var button = document.getElementById("play")
 
-   loadAudio()
 
-   button.innerHTML = "Press to Play"
-   button.disabled = false
+   button.innerHTML = "Waiting for Performance"
 
-   button.addEventListener("click", function cb(ev) {
-      //ev.currentTarget.removeEventListener(ev.type, cb)
+   performanceTime.once('timeSync', function() {
+      loadAudio()
+   })
 
-      if(!audioSuspended) {
-         audioSuspended = true
-         Howler.ctx.suspend()
-         button.innerHTML = "Press to Play"
-         return
-      } else {
-         audioSuspended = false
-         Howler.ctx.resume()
-      }
-
-      if(!audioActivated) {
-         activationSound.play()
-         audioActivated = true
-         performanceTime.emit('audioActive')
-      }
-
-      // Check to see if performance has started
-      if(performanceTime.sinceCue(startCue) >= 0) {
-         button.innerHTML = "playing..."
+   performanceTime.on('timeSync', function cb() {
+      if(performanceTime.sinceCue(startCue) < 0) {
          return
       }
-
-      button.innerHTML = "Waiting for Performance"
-
-      performanceTime.on('timeSync', function cb() {
-         if(performanceTime.sinceCue(startCue) < 0) {
-            return
-         }
-         button.innerHTML = "playing..."
-         performanceTime.off('timeSync', cb)
-      })
-
+      button.innerHTML = "Live"
+      performanceTime.off('timeSync', cb)
    })
 }
 
@@ -229,11 +260,3 @@ performanceTime = new PerformanceTime()
 
 window.onload = loadAgenda
 
-// FIXME:  HACK***HACK***HACK
-// There is an audio context bug in (at least) Chrome which causes the audio
-// context to not release audio files from RAM even after they are stopped and
-// unloaded.  As a workaround, we reload the page to reset the web audio
-// context.
-performanceTime.on('INT-5 min warning', function() {
-   window.location.reload(false)
-})

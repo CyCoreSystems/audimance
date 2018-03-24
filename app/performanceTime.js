@@ -31,7 +31,7 @@ class PerformanceTime extends EventEmitter3 {
          }
       })
 
-      return ret
+      return ret / 1000.0
    }
 
    connectWS() {
@@ -88,6 +88,7 @@ class PerformanceTime extends EventEmitter3 {
 
          if (t.cause == "cue") {
             self.emit(cues[cues.length-1].cue)
+            self.emit('cueChange')
             console.log("received cue: "+ cues[cues.length-1].cue)
          } else {
             self.emit("timeSync")
