@@ -7,16 +7,6 @@ var startCue = 'Top of Act 1'
 var SyncTolerance = 3.0 // sec
 var WakeCheckInterval = 6000.0 // ms
 
-function getLatestCuedTrack(s) {
-   var latestCuedTrack = null
-   s.tracks.forEach(function(track) {
-      if(performanceTime.sinceCue(track.cue) >= 0) {
-         latestCuedTrack = track
-      }
-   })
-   return latestCuedTrack
-}
-
 function urlFor(t) {
    return '/media/'+ t.audio_files[1]
 }
@@ -51,7 +41,7 @@ function loadAudio() {
       var el = document.getElementById('audio-'+s.id)
 
       function resync() {
-         var track = getLatestCuedTrack(s)
+         var track = performanceTime.latestCuedTrack(s)
          if(!track) {
             console.log("no latest cued track")
             return
@@ -89,7 +79,7 @@ function loadAudio() {
          console.log("resyncing from sleep")
          
          // check the source first
-         var track = getLatestCuedTrack(s)
+         var track = performanceTime.latestCuedTrack(s)
          if(el.src != urlFor(track)) {
             console.log("cued track has changed")
             el.volume = 0
@@ -113,7 +103,7 @@ function loadAudio() {
       el.addEventListener('seeked', function(ev) {
          console.log('seeked')
 
-         var now = performanceTime.sinceCue(getLatestCuedTrack(s).cue)
+         var now = performanceTime.sinceLatestTrackCue(s)
 
          var diff = Math.abs(now - el.currentTime)
 
@@ -133,7 +123,7 @@ function loadAudio() {
 
       el.addEventListener('progress', function(ev) {
 
-         var now = performanceTime.sinceCue(getLatestCuedTrack(s).cue)
+         var now = performanceTime.sinceLatestTrackCue(s)
          
          // Check to see if we have the chunk we need
          for(i=0; i<el.buffered.length; i++) {
@@ -174,7 +164,7 @@ function loadAudio() {
 
          if(input.checked) {
 
-            var track = getLatestCuedTrack(s)
+            var track = performanceTime.latestCuedTrack(s)
             if(track) {
                console.log("setting source")
                el.src = urlFor(track)
@@ -198,7 +188,7 @@ function loadAudio() {
          el.volume = 0
 
          if(input.checked) {
-            var track = getLatestCuedTrack(s)
+            var track = performanceTime.latestCuedTrack(s)
             if(track) {
                console.log("setting source")
                el.src = urlFor(track)

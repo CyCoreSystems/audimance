@@ -18,6 +18,35 @@ class PerformanceTime extends EventEmitter3 {
 
    }
 
+   // latestCuedTrack returns the latest track which has been queued for the
+   // given source.  Tracks from cues which have not yet been triggered will be
+   // discarded.
+   latestCuedTrack(src) {
+      if(!src || !src.tracks || src.tracks.length < 1) {
+         return undefined
+      }
+
+      var that = this
+
+      var latestCuedTrack = null
+      src.tracks.forEach(function(track) {
+         if(that.sinceCue(track.cue) >= 0) {
+            latestCuedTrack = track
+         }
+      })
+      return latestCuedTrack
+   }
+
+   // sinceLatestTrackCue returns the time since the latest playing track's cue
+   sinceLatestTrackCue(src) {
+      var t = this.latestCuedTrack(src)
+      if(!t || !t.cue) {
+         return 0
+      }
+
+      return this.sinceCue(t.cue)
+   }
+
    // sinceCue returns the number of milliseconds since the named cue.  If the cue
    // has not yet occurred, it returns a negative value.
    sinceCue(cueName) {
@@ -96,4 +125,5 @@ class PerformanceTime extends EventEmitter3 {
       })
    }
 }
+
 
