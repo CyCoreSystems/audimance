@@ -18,6 +18,10 @@ var AudioRolloff = "linear" // linear, logarithmic, exponential
 var SyncTolerance = 3.0 // sec
 var WakeCheckInterval = 6000.0 // ms
 var scene = {}
+var listenerPosition = {
+   x: 50,
+   y: 50
+}
 
 
 
@@ -138,24 +142,37 @@ function loadAgenda() {
             // Handle listener position changes by click
             var point = d3.clientPoint(this, d3.event)
 
-            var x = rScaleX(point[0])
-            var y = rScaleY(point[1])
+            listenerPosition.x = rScaleX(point[0])
+            listenerPosition.y = rScaleY(point[1])
 
             // Subsequent presses change the listener position
-            console.log("changing listener position to: " + x + "," + y)
+            console.log("changing listener position to: " + listenerPosition.x + "," + listenerPosition.y)
             //Howler.pos(x,y,1)
-            scene.setListenerPosition(x, y, 1)
+            scene.setListenerPosition(listenerPosition.x, listenerPosition.y, 1)
+
+            redraw()
          })
 
       // Add listener position indicator
-      //var loc = svg.selectAll()
+      var loc = svg.selectAll('circle.listener').data([listenerPosition])
+
+      loc
+         .enter().append("circle")
+            .attr("r", 10)
+            .attr("class", "listener")
+            .attr("stroke", "white")
+            .attr("stroke", "white")
+         .merge(loc)
+            .attr("cx", function(d) { return scaleX(d.x) })
+            .attr("cy", function(d) { return scaleY(d.y) })
 
       // Add source indicators
-      var sources = svg.selectAll("circle").data(agenda.rooms[0].sources)
+      var sources = svg.selectAll("circle.source").data(agenda.rooms[0].sources)
 
       sources
          .enter().append("circle")
             .attr("r", 10)
+            .attr("class", "source")
             .attr("fill", function(d, i) { return d3.schemeCategory10[i] })
             .text(function(d) { return d.name })
          .merge(sources)
@@ -247,7 +264,7 @@ function loadAudioResonance(agenda) {
    }
 
    scene.setRoomProperties(roomDimensions, roomMaterials)
-   scene.setListenerPosition(50, 50, 1)
+   scene.setListenerPosition(listenerPosition.x, listenerPosition.y, 1)
 
    roomData.sources.forEach( function(s) {
       s.tracks.forEach( function(track) {
