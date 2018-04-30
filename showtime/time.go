@@ -9,6 +9,15 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+
+	// CueNotification indicates that a specific cue has been triggered.
+	CueNotification = "cue"
+
+	// PeriodicNotification indicates that the periodic timer has elapsed.
+	PeriodicNotification = "periodic"
+)
+
 const subscriptionBufferSize = 5
 
 const maxUDPMessageSize = 512
@@ -47,6 +56,7 @@ type TimePoint struct {
 	Offset float64 `json:"offset"`
 }
 
+// OffsetSeconds returns the time elapsed since the associated cue was triggered.
 func (t *Time) OffsetSeconds() float64 {
 	return time.Since(t.Received).Seconds()
 }
@@ -59,6 +69,7 @@ func (t *Time) Now() *TimePoint {
 	}
 }
 
+// Service describes a live performance time service
 type Service struct {
 	Echo *echo.Echo
 
@@ -101,11 +112,8 @@ func (s *Service) remove(sub *Subscription) {
 	}
 }
 
-// Execute the showtime service
+// Run executes the showtime service
 func (s *Service) Run(qlabAddr string) error {
-
-	cue := make(chan string)
-	defer close(cue)
 
 	addr, err := net.ResolveUDPAddr("udp", qlabAddr)
 	if err != nil {
@@ -116,7 +124,7 @@ func (s *Service) Run(qlabAddr string) error {
 		return errors.Wrap(err, "failed to listen on UDP port")
 	}
 	defer conn.Close()
-	go s.processUDP(conn, cue)
+	go s.processUDP(conn)
 
 	// Tick on a periodic interval
 	ticker := time.NewTicker(minUpdateInterval)
@@ -124,12 +132,8 @@ func (s *Service) Run(qlabAddr string) error {
 
 	// Notify each subscriber when an update occurs
 	for {
-		select {
-		case <-ticker.C:
-			s.notify("periodic")
-		case <-cue:
-			s.notify("cue")
-		}
+		<-ticker.C
+		s.notify(PeriodicNotification)
 	}
 }
 
@@ -156,7 +160,7 @@ func (s *Service) notify(cause string) {
 	}
 }
 
-func (s *Service) processUDP(conn *net.UDPConn, cue chan string) {
+func (s *Service) processUDP(conn *net.UDPConn) {
 	for {
 		buf := make([]byte, maxUDPMessageSize)
 		n, err := conn.Read(buf)
@@ -170,15 +174,21 @@ func (s *Service) processUDP(conn *net.UDPConn, cue chan string) {
 		s.Echo.Logger.Debugf("received message from QLab: %s", recv)
 
 		// Update the showtime Time
-		s.mu.Lock()
-		s.Times = append(s.Times, &Time{
-			Cue:      recv,
-			Received: time.Now(),
-		})
-		s.mu.Unlock()
-
-		cue <- string(buf)
+		s.Trigger(recv)
 	}
+}
+
+// Trigger activates the given cue
+func (s *Service) Trigger(cue string) {
+	s.mu.Lock()
+	s.Times = append(s.Times, &Time{
+		Cue:      cue,
+		Received: time.Now(),
+	})
+	s.mu.Unlock()
+
+	s.Echo.Logger.Info("triggering cue:", cue)
+	s.notify(CueNotification)
 }
 
 // Subscription represents a subscription to showtime announcements

@@ -190,6 +190,16 @@ func FSMustString(useLocal bool, name string) string {
 
 var _escData = map[string]*_escFile{
 
+	"/app/admin.js": {
+		local:   "app/admin.js",
+		size:    79,
+		modtime: 1525095235,
+		compressed: `
+H4sIAAAAAAAC/0orzUsuyczPUygpykxPTy1yLk3VyEzRVKjmUlBQSEstSc7QUNdPLk0t1lfXzkzRgYgr
+KCjkppZk5KdYKagHhIaog8RqNblqubgAAQAA//9FaGZRTwAAAA==
+`,
+	},
+
 	"/app/d3.js": {
 		local:   "app/d3.js",
 		size:    235672,

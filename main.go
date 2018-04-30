@@ -39,15 +39,17 @@ var debug bool
 // specified.
 var ErrNilTarget = errors.New("Empty Target")
 
+// Template contains an HTML templates for the web service
 type Template struct {
 	templates *template.Template
 }
 
+// Render adapts the native template to the echo web server renderer interface
 func (t *Template) Render(w io.Writer, name string, data interface{}, ctx echo.Context) error {
 	return t.templates.ExecuteTemplate(w, name, data)
 }
 
-// CustomerContext extends the Echo context to allow for custom data
+// CustomContext extends the Echo context to allow for custom data
 type CustomContext struct {
 	echo.Context
 
@@ -130,9 +132,12 @@ func main() {
 	e.Static("/css", "css")
 	e.Static("/media", "media")
 
+	e.GET("/admin", admin)
 	e.GET("/live", live)
 	e.GET("/room/:id", enterRoom)
 	e.GET("/tracks/:id", roomTracks)
+
+	e.PUT("/cues/:id", triggerCue)
 
 	e.GET("/ws/performanceTime", performanceTime)
 
@@ -147,12 +152,12 @@ func main() {
 		os.Exit(100)
 	}()
 
-   // If we have TLS assets, start the TLS server
-   if certFile != "" && keyFile != "" {
-      e.Logger.Debug("listening on 443")
-      e.Logger.Fatal(e.StartTLS(":443", certFile, keyFile))
-   }
-   
+	// If we have TLS assets, start the TLS server
+	if certFile != "" && keyFile != "" {
+		e.Logger.Debug("listening on 443")
+		e.Logger.Fatal(e.StartTLS(":443", certFile, keyFile))
+	}
+
 	// Listen for connections
 	e.Logger.Debugf("listening on %s\n", addr)
 	e.Logger.Fatal(e.Start(addr))
@@ -191,8 +196,32 @@ func enterRoom(c echo.Context) error {
 	return ctx.Render(200, "room.html", data)
 }
 
+func triggerCue(c echo.Context) error {
+	ctx := c.(*CustomContext)
+
+	id := ctx.Param("id")
+
+	var cue *agenda.Cue
+	for _, thisCue := range ctx.Agenda.Cues {
+		if thisCue.ID == id {
+			cue = thisCue
+		}
+	}
+	if cue == nil {
+		return ctx.String(http.StatusNotFound, "no such cue")
+	}
+
+	ctx.ShowTime.Trigger(cue.Data)
+	return ctx.String(http.StatusOK, fmt.Sprintf(`Cue "%s" triggered`, cue.Name))
+}
+
+func admin(c echo.Context) error {
+	ctx := c.(*CustomContext)
+	return c.Render(200, "admin.html", ctx.Agenda)
+}
+
 func live(c echo.Context) error {
-   return c.Render(200, "live.html", nil)
+	return c.Render(200, "live.html", nil)
 }
 
 func roomTracks(c echo.Context) error {
