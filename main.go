@@ -20,6 +20,7 @@ import (
 	"github.com/labstack/gommon/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/websocket"
+   "github.com/mattn/echo-livereload"
 )
 
 var keyFile string
@@ -108,6 +109,7 @@ func main() {
 
 	if debug {
 		e.Logger.SetLevel(log.DEBUG)
+      e.Use(livereload.LiveReload())
 	}
 
 	// Compile and attach templates
