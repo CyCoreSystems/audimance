@@ -1,0 +1,58 @@
+cues:
+  - name: "5min"
+    q_lab_id: "010101-11"
+    data: "5-minute warning"
+  - name: "intro"
+    q_lab_id: "010102"
+    data: "blah"
+  - name: "erste"
+    q_lab_id: "020202"
+    data: "blah, blah"
+  - name: "zweite"
+    q_lab_id: "030105-01011"
+    data: "blah, blah, blah"
+
+rooms:
+  - name: "stage"
+    label_text: "Main Stage"
+    sources:
+      - name: "Dylan"
+        location:
+          x: 50
+          y: 100
+          z: 1
+        tracks:
+          - cue: "intro"
+            audio_files:
+              - "/performance/dylan.opus"
+      - name: "David"
+        location:
+          x: 30
+          y: 0
+          z: 1
+        tracks:
+          - cue: "intro"
+            audio_files:
+              - "/performance/david.opus"
+  - name: "history"
+    label_text: "history"
+    room_tracks:
+      - repeat: true
+        audio_files: 
+          - "/history.wav"
+  - name: "welcome"
+    label_text: "reception"
+    room_tracks:
+      - audio_files:
+          - "/welcome.wav"
+        repeat: true
+
+announcements:
+  - name: "5min"
+    exclude_rooms:
+      - "stage"
+    track:
+      cue: "5min"
+      audio_files:
+        - "/5min-warning.wav"
+

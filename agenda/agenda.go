@@ -255,7 +255,7 @@ func (s *Source) generateID() error {
 	return nil
 }
 
-// Track represents a single set of audio files for a single cue in a single room and source
+// Track represents a single set of potentially-cued audio files
 type Track struct {
 
 	// ID is the generated unique identifier
