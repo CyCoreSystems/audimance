@@ -1,7 +1,4 @@
 project_name: Audimance
-before:
-   hooks:
-      - go generate
 builds:
    - binary: audimance
      env:
