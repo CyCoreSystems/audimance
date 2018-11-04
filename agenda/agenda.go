@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
-	uuid "github.com/satori/go.uuid"
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 )
 
 // New attempts to load an agenda from the given filename
@@ -26,13 +26,19 @@ func New(filename string) (*Agenda, error) {
 
 	// Generate all IDs
 	for _, c := range a.Cues {
-		c.generateID()
+		if err = c.generateID(); err != nil {
+			return nil, errors.Wrapf(err, "failed to generate cue %s", c.Name)
+		}
 	}
 	for _, r := range a.Rooms {
-		r.generateIDs()
+		if err = r.generateIDs(); err != nil {
+			return nil, errors.Wrapf(err, "failed to generate room %s", r.Name)
+		}
 	}
 	for _, ann := range a.Announcements {
-		ann.generateID()
+		if err = ann.generateID(); err != nil {
+			return nil, errors.Wrapf(err, "failed to generate announcement %s", ann.Name)
+		}
 	}
 	return a, err
 }
@@ -249,23 +255,24 @@ func (s *Source) generateID() error {
 	return nil
 }
 
+// Track represents a single set of audio files for a single cue in a single room and source
 type Track struct {
 
 	// ID is the generated unique identifier
 	ID string `json:"id" yaml:"-"`
 
-   // LoadCue indicates the cue at which the track should be loaded.  This will generally be the cue immediately preceding the Cue
-   LoadCue string `json:"load_cue" yaml:"load_cue"`
+	// LoadCue indicates the cue at which the track should be loaded.  This will generally be the cue immediately preceding the Cue
+	LoadCue string `json:"load_cue" yaml:"load_cue"`
 
-   // LoadWindow indicates the amount of time (in seconds) to allow for the random loading of the audio.  Tracks are loaded at random times between LoadCue's trigger and LoadWindow's duration therefrom to prevent a thundering herd.
-   LoadWindow float64 `json:"load_window" yaml:"load_window"`
+	// LoadWindow indicates the amount of time (in seconds) to allow for the random loading of the audio.  Tracks are loaded at random times between LoadCue's trigger and LoadWindow's duration therefrom to prevent a thundering herd.
+	LoadWindow float64 `json:"load_window" yaml:"load_window"`
 
 	// Cue is the unique identifier of the cue at which this track should be
 	// played
 	Cue string `json:"cue" yaml:"cue"`
 
-   // KillCue indicates the cue at which the track should be killed whether it has finished or not
-   KillCue string  `json:"kill_cue" yaml:"kill_cue"`
+	// KillCue indicates the cue at which the track should be killed whether it has finished or not
+	KillCue string `json:"kill_cue" yaml:"kill_cue"`
 
 	// AudioFile is the user-supplied location of the audio file, relative to
 	// the filesystem `media/` directory
@@ -313,6 +320,9 @@ type Announcement struct {
 
 func hashString(in string) (out string) {
 	hasher := md5.New()
-	hasher.Write([]byte(in))
+	if _, err := hasher.Write([]byte(in)); err != nil {
+		panic("failed to write hash for " + out + ": " + err.Error())
+	}
+
 	return hex.EncodeToString(hasher.Sum(nil))
 }

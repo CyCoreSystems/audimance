@@ -19,7 +19,6 @@ import (
 	"github.com/labstack/echo/middleware"
 	"github.com/labstack/gommon/log"
 	"github.com/mattn/echo-livereload"
-	livereload "github.com/mattn/echo-livereload"
 	"github.com/pkg/errors"
 	"golang.org/x/net/websocket"
 )
@@ -36,10 +35,6 @@ var qlabAddr string
 // debug enables debug mode, which uses local files
 // instead of bundled ones
 var debug bool
-
-// ErrNilTarget indicates that the row/day/date has no target
-// specified.
-var ErrNilTarget = errors.New("Empty Target")
 
 // Template contains an HTML templates for the web service
 type Template struct {

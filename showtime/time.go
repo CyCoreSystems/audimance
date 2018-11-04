@@ -79,8 +79,6 @@ type Service struct {
 	subs []*Subscription
 
 	mu sync.Mutex
-
-	closed bool
 }
 
 // Subscribe registers a subscription to receive showtime announcements
