@@ -290,7 +290,7 @@ type Track struct {
 func (t *Track) generateID() error {
 	// If we don't have a name, generate one
 	if len(t.AudioFiles) < 1 {
-		return errors.New("track must have a name")
+		return errors.New("track must have audio files")
 	}
 
 	t.ID = hashString(fmt.Sprintf("audio-%s", t.AudioFiles[0]))
