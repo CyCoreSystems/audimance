@@ -18,6 +18,7 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/labstack/gommon/log"
+	livereload "github.com/mattn/echo-livereload"
 	"github.com/pkg/errors"
 	"golang.org/x/net/websocket"
 )
@@ -110,6 +111,7 @@ func main() {
 
 	if debug {
 		e.Logger.SetLevel(log.DEBUG)
+		e.Use(livereload.LiveReload())
 	}
 
 	// Compile and attach templates
