@@ -18,6 +18,7 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/labstack/gommon/log"
+	"github.com/mattn/echo-livereload"
 	livereload "github.com/mattn/echo-livereload"
 	"github.com/pkg/errors"
 	"golang.org/x/net/websocket"
