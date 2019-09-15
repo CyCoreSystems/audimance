@@ -1,0 +1,9 @@
+[Unit]
+Description=Audimance
+
+[Service]
+WorkingDirectory=/srv/audimance
+ExecStart=/usr/local/bin/audimance -debug -cert tls.cert -key tls.key
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="x-ua-compatible">
+
+	<title>Audimance - Room {{.Room.LabelText}}</title>
+
+</head>
+<body>
+
+	Room {{.Room.LabelText}} <span id="loadStatus">loading</span>
+
+	<!-- audio files to be played -->
+	{{range .Room.AllTracks}}
+	<audio id="{{.ID}}" preload="auto">
+		<source src="{{.URI}}" preload="auto" type="audio/ogg; codecs=opus"/>
+	</audio>
+	{{end}}
+
+	<script src="/app/room.js"></script>
+</body>
+</html>

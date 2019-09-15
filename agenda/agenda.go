@@ -46,6 +46,9 @@ func New(filename string) (*Agenda, error) {
 // Agenda describes the order of service and details of a performance
 type Agenda struct {
 
+	// Title is the title of the performance
+	Title string `json:"title" yaml:"title"`
+
 	// Cues describe specific points in time in a performance
 	Cues []*Cue `json:"cues" yaml:"cues"`
 
@@ -55,15 +58,22 @@ type Agenda struct {
 	// Announcements describe broadcast messages which will be played across any
 	// number of rooms
 	Announcements []*Announcement `json:"announcements" yaml:"announcements"`
+
+	// PerformanceURL is the URL to which clients should be redirected when the
+	// performance is about to start.  Generally, it will be of the form:
+	// `https://yourserver.com/live`, as `live` is the path at which Audimance's
+	// live interface may be found.
+	//
+	// This setting is optional but recommended.
+	PerformanceURL string
 }
 
 // AllTracks returns the list of all tracks for all rooms and announcements so
 // that they may be prefetched.
 func (a *Agenda) AllTracks() (out []*Track) {
-
 	// Track already-seen audio files so that we do not list them twice
 	var seen []string
-	var unseen = func(id string) bool {
+	unseen := func(id string) bool {
 		for _, i := range seen {
 			if i == id {
 				return false
@@ -103,17 +113,21 @@ type Cue struct {
 	// Name is the unique, human-friendly name for this cue
 	Name string `json:"name" yaml:"name"`
 
-	// QLabID is the unique identifier for this cue in QLab (assuming there are
-	// such things)
-	QLabID string `json:"q_lab_id" yaml:"q_lab_id"`
+	// QLabID is the unique identifier for this cue in QLab (informational only;
+	// not used by Audimance)
+	QLabID string `json:"qlabID" yaml:"qlabID"`
 
-	// Data is the expected data to be emitted from QLab (assuming this is useful)
+	// Data is the expected data to be received on the QLab port to indicate
+	// when this cue should be fired
 	Data string `json:"data" yaml:"data"`
+
+	// PerformanceRedirect indicates that when this cue is received, clients
+	// should be transferred to the live PerformanceURL
+	PerformanceRedirect bool `json:"performanceRedirect" yaml:"performanceRedirect"`
 }
 
 // ID returns a unique hex ID for the cue
 func (c *Cue) generateID() error {
-
 	// If we don't have a name, generate one
 	if c.Name == "" {
 		c.Name = uuid.Must(uuid.NewV1()).String()
@@ -135,7 +149,7 @@ type Room struct {
 
 	// LabelText indicates the textual label to be displayed in the menu for
 	// users to select this room
-	LabelText string `json:"label_text" yaml:"label_text"`
+	LabelText string `json:"labelText" yaml:"labelText"`
 
 	// Sources describes the set of locations and audio files which will be
 	// played.
@@ -143,11 +157,10 @@ type Room struct {
 
 	// RoomTracks is a list of audio tracks to be played in a room, sourced from
 	// everywhere.  This is generally exclusive with Sources.
-	RoomTracks []*Track `json:"room_tracks" yaml:"room_tracks"`
+	RoomTracks []*Track `json:"roomTracks" yaml:"roomTracks"`
 }
 
 func (r *Room) generateIDs() error {
-
 	err := r.generateID()
 	if err != nil {
 		return err
@@ -177,10 +190,9 @@ func (r *Room) generateID() error {
 // AllTracks returns the list of all tracks for the room so that they may be
 // preloaded.
 func (r *Room) AllTracks() (out []*Track) {
-
 	// Track already-seen audio files so that we do not list them twice
 	var seen []string
-	var unseen = func(id string) bool {
+	unseen := func(id string) bool {
 		for _, i := range seen {
 			if i == id {
 				return false
@@ -262,21 +274,21 @@ type Track struct {
 	ID string `json:"id" yaml:"-"`
 
 	// LoadCue indicates the cue at which the track should be loaded.  This will generally be the cue immediately preceding the Cue
-	LoadCue string `json:"load_cue" yaml:"load_cue"`
+	LoadCue string `json:"loadCue" yaml:"loadCue"`
 
 	// LoadWindow indicates the amount of time (in seconds) to allow for the random loading of the audio.  Tracks are loaded at random times between LoadCue's trigger and LoadWindow's duration therefrom to prevent a thundering herd.
-	LoadWindow float64 `json:"load_window" yaml:"load_window"`
+	LoadWindow float64 `json:"loadWindow" yaml:"loadWindow"`
 
 	// Cue is the unique identifier of the cue at which this track should be
 	// played
 	Cue string `json:"cue" yaml:"cue"`
 
 	// KillCue indicates the cue at which the track should be killed whether it has finished or not
-	KillCue string `json:"kill_cue" yaml:"kill_cue"`
+	KillCue string `json:"killCue" yaml:"killCue"`
 
 	// AudioFile is the user-supplied location of the audio file, relative to
 	// the filesystem `media/` directory
-	AudioFiles []string `json:"audio_files" yaml:"audio_files"`
+	AudioFiles []string `json:"audioFiles" yaml:"audioFiles"`
 
 	// Repeat indicates whether the PlaySet should be repeated after it is
 	// completed.  This will cause the PlaySet to be continually played.
@@ -315,7 +327,7 @@ type Announcement struct {
 
 	// ExcludeRooms is the list of room names in which this announcement should
 	// NOT be played
-	ExcludeRooms []string `json:"exclude_rooms" yaml:"exclude_rooms"`
+	ExcludeRooms []string `json:"excludeRooms" yaml:"excludeRooms"`
 }
 
 func hashString(in string) (out string) {

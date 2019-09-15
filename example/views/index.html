@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="x-ua-compatible">
+
+	<title>Audimance - Room List</title>
+
+	<!-- Prefetch all audio files -->
+	{{range .AllTracks}}
+	<link rel="prefetch" as="media" href="{{.URI}}">
+	{{end}}
+
+
+</head>
+<body>
+
+	Rooms List:
+
+	<ul>
+		{{range .Rooms}}
+		<li><a href="/room/{{.ID}}">{{.LabelText}}</a></li>
+		{{end}}
+	</ul>
+
+</body>
+</html>

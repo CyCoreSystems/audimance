@@ -14,11 +14,9 @@ import (
 
 	"github.com/CyCoreSystems/audimance/agenda"
 	"github.com/CyCoreSystems/audimance/showtime"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/labstack/gommon/log"
-	"github.com/mattn/echo-livereload"
 	"github.com/pkg/errors"
 	"golang.org/x/net/websocket"
 )
@@ -73,10 +71,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	if debug {
-		spew.Dump(a)
-	}
-
 	// Create web server
 	e := echo.New()
 
@@ -107,7 +101,6 @@ func main() {
 
 	if debug {
 		e.Logger.SetLevel(log.DEBUG)
-		e.Use(livereload.LiveReload())
 	}
 
 	// Compile and attach templates
@@ -135,8 +128,11 @@ func main() {
 	e.GET("/room/:id", enterRoom)
 	e.GET("/tracks/:id", roomTracks)
 
+	// command API for manually triggering cues --
+	// FIXME: this is unprotected, unauthenticated
 	e.PUT("/cues/:id", triggerCue)
 
+	// performanceTime provides a websocket connection which provides time tickers and cues based on realtime performance status
 	e.GET("/ws/performanceTime", performanceTime)
 
 	e.GET("/agenda.json", agendaJSON)
