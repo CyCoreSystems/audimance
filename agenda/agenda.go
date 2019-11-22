@@ -5,11 +5,16 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"strings"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
+
+var fileFormats = []string{"mp3", "m4a", "webm"}
 
 // New attempts to load an agenda from the given filename
 func New(filename string) (*Agenda, error) {
@@ -22,6 +27,11 @@ func New(filename string) (*Agenda, error) {
 	err = yaml.Unmarshal(data, a)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read YAML")
+	}
+
+	// If the agenda has its own set of file formats, use them instead of the default
+	if len(a.Formats) > 0 {
+		fileFormats = a.Formats
 	}
 
 	// Generate all IDs
@@ -48,6 +58,9 @@ type Agenda struct {
 
 	// Title is the title of the performance
 	Title string `json:"title" yaml:"title"`
+
+	// Formats defines the set of audio file formats to be supported.  This is optional and if not specified, "webm" will be assumed.
+	Formats []string `json:"formats" yaml:"formats"`
 
 	// Cues describe specific points in time in a performance
 	Cues []*Cue `json:"cues" yaml:"cues"`
@@ -124,6 +137,11 @@ type Cue struct {
 	// PerformanceRedirect indicates that when this cue is received, clients
 	// should be transferred to the live PerformanceURL
 	PerformanceRedirect bool `json:"performanceRedirect" yaml:"performanceRedirect"`
+
+	// ReferenceSeconds is a reference count of the number of seconds the cue
+	// should last before the next one.  This is informational only and will be
+	// displayed in the administrative control panel if supplied.
+	ReferenceSeconds int64 `json:"referenceSeconds" yaml:"referenceSeconds"`
 }
 
 // ID returns a unique hex ID for the cue
@@ -136,6 +154,15 @@ func (c *Cue) generateID() error {
 	c.ID = hashString(fmt.Sprintf("cue-%s", c.Name))
 
 	return nil
+}
+
+// FormattedReferenceTime returns the human-readable format of the cue's ReferenceSeconds, if there is one
+func (c *Cue) FormattedReferenceTime() string {
+	if c.ReferenceSeconds > 0 {
+		dur := time.Duration(c.ReferenceSeconds) * time.Second
+		return dur.String()
+	}
+	return ""
 }
 
 // Room describes a virtual room in which audio may be played
@@ -276,7 +303,10 @@ type Track struct {
 	// LoadCue indicates the cue at which the track should be loaded.  This will generally be the cue immediately preceding the Cue
 	LoadCue string `json:"loadCue" yaml:"loadCue"`
 
-	// LoadWindow indicates the amount of time (in seconds) to allow for the random loading of the audio.  Tracks are loaded at random times between LoadCue's trigger and LoadWindow's duration therefrom to prevent a thundering herd.
+	// LoadWindow indicates the amount of time (in seconds) to allow for the
+	// random loading of the audio.  Tracks are loaded at random times between
+	// LoadCue's trigger and LoadWindow's duration therefrom to prevent a
+	// thundering herd.
 	LoadWindow float64 `json:"loadWindow" yaml:"loadWindow"`
 
 	// Cue is the unique identifier of the cue at which this track should be
@@ -286,8 +316,15 @@ type Track struct {
 	// KillCue indicates the cue at which the track should be killed whether it has finished or not
 	KillCue string `json:"killCue" yaml:"killCue"`
 
-	// AudioFile is the user-supplied location of the audio file, relative to
-	// the filesystem `media/` directory
+	// AudioFilePrefix is the path/name prefix of the audio file locations,
+	// relative to the filesystem `media/` directory.  The file extension will
+	// be calculated based on the supplied format list of the agenda.
+	AudioFilePrefix string `json:"audioFilePrefix" yaml:"audioFilePrefix"`
+
+	// AudioFiles is the user-supplied location of the audio file, relative to
+	// the filesystem `media/` directory.  Generally, this will be populated
+	// automatically by the combination of AudioFilePrefix and the top-level
+	// Formats list.
 	AudioFiles []string `json:"audioFiles" yaml:"audioFiles"`
 
 	// Repeat indicates whether the PlaySet should be repeated after it is
@@ -300,9 +337,36 @@ type Track struct {
 // be used multiple times (to play the same file at different times or
 // locations).
 func (t *Track) generateID() error {
-	// If we don't have a name, generate one
+	if t.AudioFilePrefix != "" && len(t.AudioFiles) > 0 {
+		return errors.Errorf("please only specify one of AudioFilePrefix or AudioFiles")
+	}
+
+	// Calculate AudioFiles from prefix, if we are given one
+	if t.AudioFilePrefix != "" {
+		for _, f := range fileFormats {
+			t.AudioFiles = append(t.AudioFiles, fmt.Sprintf("%s.%s", strings.TrimSuffix(t.AudioFilePrefix, "."), f))
+		}
+	}
+
 	if len(t.AudioFiles) < 1 {
 		return errors.New("track must have audio files")
+	}
+
+	// TODO: attempt to generate required files if they are missing
+
+	// Validate each of the referenced audio files
+	for _, fn := range t.AudioFiles {
+		f, err := os.Open(fmt.Sprintf("media/%s", fn))
+		if err != nil {
+			return errors.Wrapf(err, "failed to open track audio file media/%s", fn)
+		}
+		fInfo, err := f.Stat()
+		if err != nil {
+			return errors.Wrapf(err, "failed to stat audio file media/%s", fn)
+		}
+		if fInfo.Size() == 0 {
+			return errors.Errorf("track audio file media/%s has no data", fn)
+		}
 	}
 
 	t.ID = hashString(fmt.Sprintf("audio-%s", t.AudioFiles[0]))

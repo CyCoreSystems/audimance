@@ -47,6 +47,19 @@ class PerformanceTime extends EventEmitter3 {
       return this.sinceCue(t.cue)
    }
 
+   // latestCue returns the most recently-received cue.  If no cue has been received, it will return undefined.
+   latestCue() {
+      let latest = undefined;
+
+      this.cues.forEach(function(c) {
+         if (latest == undefined || c.at > latest.at) {
+            latest = c
+         }
+      })
+
+      return latest;
+   }
+
    // sinceCue returns the number of milliseconds since the named cue.  If the cue
    // has not yet occurred, it returns a negative value.
    sinceCue(cueName) {

@@ -8,7 +8,7 @@ var SyncTolerance = 3.0 // sec
 var WakeCheckInterval = 6000.0 // ms
 
 function urlFor(t) {
-   return '/media/'+ t.audio_files[1]
+   return '/media/'+ t.audioFiles[1]
 }
 
 function loadAudio() {
@@ -55,14 +55,14 @@ function loadAudio() {
 
          var diff = Math.abs(now - el.currentTime)
 
-         if(diff > SyncTolerance) {
+         if(diff > SyncTolerance || el.currentTime == 0) {
             console.log("out of sync; reseeking.  Diff: " + diff)
             el.volume = 0
             el.currentTime = now
             return
          }
 
-         console.log("already synced")
+         console.log("already synced:", now, el.currentTime)
       }
 
       // Handle wake up resync by resetting source and position
