@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
 )
 
@@ -112,7 +112,6 @@ func (s *Service) remove(sub *Subscription) {
 
 // Run executes the showtime service
 func (s *Service) Run(qlabAddr string) error {
-
 	addr, err := net.ResolveUDPAddr("udp", qlabAddr)
 	if err != nil {
 		return errors.Wrap(err, "failed to parse cue listener address")

@@ -14,8 +14,8 @@ import (
 
 	"github.com/CyCoreSystems/audimance/agenda"
 	"github.com/CyCoreSystems/audimance/showtime"
-	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/websocket"

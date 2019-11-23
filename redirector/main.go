@@ -1,17 +1,16 @@
 package main
 
 import (
-	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
 	// Create web server
-   e := echo.New()
-   e.Pre(middleware.HTTPSRedirect())
+	e := echo.New()
+	e.Pre(middleware.HTTPSRedirect())
 
-   e.Logger.Debug("listening on :80")
+	e.Logger.Debug("listening on :80")
 
-   e.Logger.Fatal(e.Start(":80"))
+	e.Logger.Fatal(e.Start(":80"))
 }
-

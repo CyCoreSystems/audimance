@@ -6,13 +6,11 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/kr/pretty v0.1.0 // indirect
-	github.com/labstack/echo v0.0.0-20180911044237-1abaa3049251
-	github.com/labstack/gommon v0.2.7
+	github.com/labstack/echo/v4 v4.1.11
+	github.com/labstack/gommon v0.3.0
 	github.com/mattn/go-colorable v0.1.4 // indirect
 	github.com/mattn/go-isatty v0.0.10 // indirect
 	github.com/pkg/errors v0.8.1
-	github.com/stretchr/testify v1.4.0 // indirect
-	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	golang.org/x/crypto v0.0.0-20191122220453-ac88ee75c92c // indirect
 	golang.org/x/net v0.0.0-20191119073136-fc4aabc6c914
 	golang.org/x/sys v0.0.0-20191120155948-bd437916bb0e // indirect
