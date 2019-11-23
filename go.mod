@@ -9,7 +9,6 @@ require (
 	github.com/labstack/gommon v0.2.7
 	github.com/mattn/go-isatty v0.0.4 // indirect
 	github.com/pkg/errors v0.8.0
-	github.com/spf13/pflag v1.0.3
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	golang.org/x/crypto v0.0.0-20181030102418-4d3f4d9ffa16 // indirect
 	golang.org/x/net v0.0.0-20181102091132-c10e9556a7bc
