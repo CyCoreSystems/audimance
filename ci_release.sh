@@ -8,5 +8,7 @@ if [ ! -e $CI ]; then
    # Create the release
    echo "Creating release..."
    goreleaser release
+else
+   goreleaser release --skip-publish
 fi
 
