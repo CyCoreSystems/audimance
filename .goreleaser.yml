@@ -25,9 +25,8 @@ changelog:
        - '^test:'
 
 dockers:
-   - image: cycoresystems/audimance
-     tag_templates:
-        - "{{ .Tag }}"
-        - "v{{ .Major }}"
-        - "v{{ .Major }}.{{ .Minor }}"
-        - latest
+   - image_templates:
+      - 'cycoresystems/audimance:{{ .Tag }}'
+      - 'cycoresystems/audimance:{{ .Major }}'
+      - 'cycoresystems/audimance:{{ .Major }}.{{ .Minor }}'
+      - latest
