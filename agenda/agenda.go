@@ -349,7 +349,7 @@ func (t *Track) generateID() error {
 	}
 
 	if len(t.AudioFiles) < 1 {
-		return errors.New("track must have audio files")
+		return errors.Errorf("track must have audio files (cue %s)", t.Cue)
 	}
 
 	// TODO: attempt to generate required files if they are missing
