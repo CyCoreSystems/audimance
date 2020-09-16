@@ -78,12 +78,12 @@ type Agenda struct {
 	// live interface may be found.
 	//
 	// This setting is optional but recommended.
-	PerformanceURL string
+	PerformanceURL string `json:"performanceURL" yaml:"performanceURL"`
 
 	// RemoteMedia indicates that the media files are not stored on the same
 	// server, and so not validation should be performed, and no modifications
 	// of the prefix be made.  This is not recommended.
-	RemoteMedia bool
+	RemoteMedia bool `json:"remoteMedia" yaml:"remoteMedia"`
 }
 
 // AllTracks returns the list of all tracks for all rooms and announcements so
