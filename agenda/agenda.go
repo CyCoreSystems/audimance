@@ -41,12 +41,12 @@ func New(filename string) (*Agenda, error) {
 		}
 	}
 	for _, r := range a.Rooms {
-		if err = r.generateIDs(); err != nil {
+		if err = r.generateIDs(a); err != nil {
 			return nil, errors.Wrapf(err, "failed to generate room %s", r.Name)
 		}
 	}
 	for _, ann := range a.Announcements {
-		if err = ann.generateID(); err != nil {
+		if err = ann.generateID(a); err != nil {
 			return nil, errors.Wrapf(err, "failed to generate announcement %s", ann.Name)
 		}
 	}
@@ -79,6 +79,11 @@ type Agenda struct {
 	//
 	// This setting is optional but recommended.
 	PerformanceURL string
+
+	// RemoteMedia indicates that the media files are not stored on the same
+	// server, and so not validation should be performed, and no modifications
+	// of the prefix be made.  This is not recommended.
+	RemoteMedia bool
 }
 
 // AllTracks returns the list of all tracks for all rooms and announcements so
@@ -187,14 +192,14 @@ type Room struct {
 	RoomTracks []*Track `json:"roomTracks" yaml:"roomTracks"`
 }
 
-func (r *Room) generateIDs() error {
+func (r *Room) generateIDs(a *Agenda) error {
 	err := r.generateID()
 	if err != nil {
 		return err
 	}
 
 	for _, s := range r.Sources {
-		err = s.generateIDs()
+		err = s.generateIDs(a)
 		if err != nil {
 			return err
 		}
@@ -267,15 +272,14 @@ type Source struct {
 	Tracks []*Track `json:"tracks" yaml:"tracks"`
 }
 
-func (s *Source) generateIDs() error {
+func (s *Source) generateIDs(a *Agenda) error {
 	err := s.generateID()
 	if err != nil {
 		return err
 	}
 
 	for _, t := range s.Tracks {
-		err = t.generateID()
-		if err != nil {
+		if err = t.generateID(a); err != nil {
 			return err
 		}
 	}
@@ -336,7 +340,7 @@ type Track struct {
 // required to be system-unique; only file-unique.  Thus the same track ID may
 // be used multiple times (to play the same file at different times or
 // locations).
-func (t *Track) generateID() error {
+func (t *Track) generateID(a *Agenda) error {
 	if t.AudioFilePrefix != "" && len(t.AudioFiles) > 0 {
 		return errors.Errorf("please only specify one of AudioFilePrefix or AudioFiles")
 	}
@@ -355,17 +359,19 @@ func (t *Track) generateID() error {
 	// TODO: attempt to generate required files if they are missing
 
 	// Validate each of the referenced audio files
-	for _, fn := range t.AudioFiles {
-		f, err := os.Open(fmt.Sprintf("media/%s", fn))
-		if err != nil {
-			return errors.Wrapf(err, "failed to open track audio file media/%s", fn)
-		}
-		fInfo, err := f.Stat()
-		if err != nil {
-			return errors.Wrapf(err, "failed to stat audio file media/%s", fn)
-		}
-		if fInfo.Size() == 0 {
-			return errors.Errorf("track audio file media/%s has no data", fn)
+	if !a.RemoteMedia {
+		for _, fn := range t.AudioFiles {
+			f, err := os.Open(fmt.Sprintf("media/%s", fn))
+			if err != nil {
+				return errors.Wrapf(err, "failed to open track audio file media/%s", fn)
+			}
+			fInfo, err := f.Stat()
+			if err != nil {
+				return errors.Wrapf(err, "failed to stat audio file media/%s", fn)
+			}
+			if fInfo.Size() == 0 {
+				return errors.Errorf("track audio file media/%s has no data", fn)
+			}
 		}
 	}
 
