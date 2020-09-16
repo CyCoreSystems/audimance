@@ -30,4 +30,4 @@ dockers:
       - 'cycoresystems/audimance:{{ .Tag }}'
       - 'cycoresystems/audimance:{{ .Major }}'
       - 'cycoresystems/audimance:{{ .Major }}.{{ .Minor }}'
-      - latest
+      - 'cycoresystems/audimance:latest
