@@ -1,9 +1,31 @@
 # Audimance
 
-Audimance is a tool for the creation of an entirely new kind of non-visual
-artistic experience.  Audimance enables a user-centered and choice-centered rich
-auditory experience to be used in isolation or in conjunction with a live
-performance.
+Audimance is a tool for the creation and deployment of user-directed artistic audio experiences.
+Content may be designed for use in isolation, as accompaniment to other media, or in conjunction 
+with live performance using QLab. 
+
+Audimance enables a user-centered, flexibly complex, audio environment ideal for nonvisual audiences
+and can be used to provide either single-track or multi-track audio description.  
+
+## Why? 
+
+Audimance was initially created to solve for a lack of equity and aesthetic sophistication 
+in the previous standard practice of audio description for dance.  Designed by Laurel Lawson
+(laurellawson.com) and initially deployed alongside Kinetic Light's DESCENT (kineticlight.org/descent),
+Audimance is based on research and continual feedback from primarily nonvisual artists and arts audiences.  
+
+Audimance provides a flexible deployment platform which:
+- permits artists and content creators to easily deploy single or multi-track content
+- facilitates venues in providing consistently available accessibility without large dedicated hardware systems
+- creates user-directed aesthetic experiences which prioritize user agency for style and complexity
+
+## Sample Use Cases
+
+* Rich multi-track audio description to accompany live or recorded dance, theatre, or other performing arts 
+* Spatialized sonic art or performance 
+* Simple audio description to accompany performing arts 
+* Delivery of programs, notes, or other textual assets accompanying performing or exhibited arts
+* Audio description for visual arts, such as gallery or museum exhibitions 
 
 ## Technical
 
