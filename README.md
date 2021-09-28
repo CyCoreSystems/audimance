@@ -23,7 +23,8 @@ Audimance provides a flexible deployment platform which:
 
 * Rich multi-track audio description to accompany live or recorded dance, theatre, or other performing arts 
 * Spatialized sonic art or performance 
-* Simple audio description to accompany performing arts 
+* Simple audio description to accompany performing arts
+* Silent concerts or other sound experiences leveraging personal mobile devices 
 * Delivery of programs, notes, or other textual assets accompanying performing or exhibited arts
 * Audio description for visual arts, such as gallery or museum exhibitions 
 
