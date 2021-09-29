@@ -31,6 +31,17 @@ to implement both necessary and nice-to-have UI features.
 We are actively forming a team and soliciting support for this major milestone.  
 If you are interested in participating, or if your company can support this effort, please reach out.
 
+###Creator UI
+
+Currently, content is manually adjusted, uploaded, and spatially placed by editing the text fille. 
+This needs a GUI plus functionality for auto-adjusting audio files and spatializing the result for 
+novice users.  
+
+###Venue UI
+
+Currently, show selection and content availability is managed by network access.  Venue operators or artists
+need to be able to set up venues and events with geofencing and time bounds for IP protection.
+
 ###Visual clone
 
 Based on research conducted by Kinetic Light, the design model pioneered with Audimance's alpha deployment 
