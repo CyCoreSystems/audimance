@@ -28,6 +28,58 @@ Audimance provides a flexible deployment platform which:
 * Delivery of programs, notes, or other textual assets accompanying performing or exhibited arts
 * Audio description for visual arts, such as gallery or museum exhibitions 
 
+## Usage
+
+Audimance can be run as a binary operating on a set of custom web files and
+program agenda configuration.  Generally, no modifications to the engine source
+code are necessary.
+
+Audimance expects a certain format for its execution root.  See the `/example`
+directory for this structure.
+
+The most important file is the `agenda.yaml`, which defines the program,
+sections, cues, audio files, etc.  The web templates are located in the `views/`
+directory.  `index.html` is always the entry point, and `room.html` represents
+the template for a room (a place where a performance occurs).
+
+There are very few constraints on styling or format overall.  Instead, the data
+structures are accessible via Go `text/html` templating and from Javascript.
+
+### Go template data structures
+
+The data structure available to a Room is:
+
+```go
+struct {
+   Announcements []*agenda.Announcement
+   Room *Agenda.Room
+}
+```
+
+The main index, however, has the entire Agenda available at its data root.
+
+### Javascript helpers
+
+The core of the javascript side of Audimance consists of the `performanceTime` package.
+
+This package receives continuous ticker notifications and cue announcements
+which enable Audimance to keep in sync with the live performance, to the
+fraction of a second, continuously synchronizing.
+
+The builtin `room.js` file provides a complete application for playback and
+control of a performance.  You need only load it from your room's HTML, provide
+it a `<div id="audimance-map"></div>` to fill, and it will handle everything
+else.
+
+Feel free, too, to simply use it as a model on which to build your own.
+
+### Dependencies
+
+Because Audimance is intended to be run at venues with unreliable internet, all
+dependencies are bundled and local.  We recommend any additional dependencies be
+managed in the same way to reduce external internet traffic from dozens or
+hundreds of audience members.
+
 ## Technical
 
 ### Audio spatialization

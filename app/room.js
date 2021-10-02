@@ -1,29 +1,38 @@
-var agenda = {}
-var roomName = ''
-var room = {}
-var tracks = {}
-var performanceTime = {}
-var svg = {}
-var playButtons = [1]
-var clickPoint = {}
-var height = 0
-var width = 0
-var scaleX = {}
-var scaleY = {}
-var rScaleX = {}
-var rScaleY = {}
-var audioLoaded = false
-var AudioMaxDistance = 50
-var AudioRolloff = "linear" // linear, logarithmic, exponential
-var SyncTolerance = 3.0 // sec
-var WakeCheckInterval = 6000.0 // ms
-var scene = {}
-var listenerPosition = {
+// Upstream dependencies
+import * as d3 from './d3.js';
+import * as _ from './lodash.min.js';
+import * as ResonanceAudio from './resonance-audio.js';
+import * as EventEmitter from './eventemitter3.js';
+
+// Local dependencies
+import {LoadAgenda} from './agenda.js';
+import {PerformanceTime} from './performanceTime.js';
+
+var performanceTime = new PerformanceTime()
+
+// Tunables
+export let AudioMaxDistance = 50
+export let AudioRolloff = "linear" // linear, logarithmic, exponential
+export let SyncTolerance = 3.0 // sec
+export let WakeCheckInterval = 6000.0 // ms
+
+export let ListenerPosition = {
    x: 50,
    y: 50
 }
 
-class Room extends EventEmitter3 {
+// Room provides a d3-based view containing a reticle for locating the listener in a field of audio sources.
+// This room will play spatialised audio synchronised to an Audimance performance server.
+// There must exist in the DOM a `<div id="audimance-room"></div>` for it to insert its SVG.
+// 
+// It should be passed an object containing an `agenda` and a `roomName` for a room contained within that agenda.
+// ex:
+//      room = new Room({
+//         roomName: "happy trails",
+//         agenda: agenda
+//      })
+//
+export class Room extends EventEmitter {
 
    constructor(cfg) {
       super()
@@ -39,7 +48,7 @@ class Room extends EventEmitter3 {
          console.log("Room: no room")
          return
       }
-      this.roomName = roomName
+      this.roomName = cfg.roomName
 
       if(!cfg.agenda || typeof(cfg.agenda) != "object") {
          console.log("Room: no agenda")
@@ -47,11 +56,13 @@ class Room extends EventEmitter3 {
       }
       this.agenda = cfg.agenda
 
-      this.el = document.getElementById("audimance-map")
+      this.el = document.getElementById("audimance-room")
       if(!this.el) {
-         console.log("Room: no 'audimance-map' identified element found")
+         console.log("Room: no 'audimance-room' identified element found")
          return
       }
+
+      this.scene = {}
 
       this.constructRoom()
 
@@ -70,13 +81,13 @@ class Room extends EventEmitter3 {
             // Handle listener position changes by click
             let point = d3.clientPoint(this, d3.event)
 
-            listenerPosition.x = self.rScaleX(point[0])
-            listenerPosition.y = self.rScaleY(point[1])
+            ListenerPosition.x = self.rScaleX(point[0])
+            ListenerPosition.y = self.rScaleY(point[1])
 
             // Subsequent presses change the listener position
-            console.log("changing listener position to: " + listenerPosition.x + "," + listenerPosition.y)
+            console.log("changing listener position to: " + ListenerPosition.x + "," + ListenerPosition.y)
             //Howler.pos(x,y,1)
-            scene.setListenerPosition(listenerPosition.x, listenerPosition.y, 1)
+            self.scene.setListenerPosition(ListenerPosition.x, ListenerPosition.y, 1)
 
             _.bind(self.redraw, self)()
          })
@@ -87,8 +98,8 @@ class Room extends EventEmitter3 {
    redraw() {
       let self = this
 
-      width = this.el.clientWidth
-      height = this.el.clientHeight
+      let width = this.el.clientWidth
+      let height = this.el.clientHeight
 
       self.scaleX = d3.scaleLinear().domain([0,100]).range([0,width])
       self.rScaleX = d3.scaleLinear().domain([0,width]).range([0,100])
@@ -116,7 +127,7 @@ class Room extends EventEmitter3 {
             .on("click", function(ev) {
                console.log("play clicked")
                self.audioLoaded = true
-               loadAudio(self.agenda)
+               loadAudio(self)
 
                // Draw the sound field
                _.bind(self.redraw, self)()
@@ -128,7 +139,7 @@ class Room extends EventEmitter3 {
       }
 
       // Add listener position indicator
-      let loc = self.svg.selectAll('circle.listener').data([listenerPosition])
+      let loc = self.svg.selectAll('circle.listener').data([ListenerPosition])
 
       loc
          .enter().append("circle")
@@ -171,42 +182,16 @@ class Room extends EventEmitter3 {
 }
 
 
-function debugToHTML(txt) {
-   let dbg = document.getElementById("debug")
-   if(!dbg) {
-      return
-   }
-
-   let el = document.createElement("p")
-   el.appendChild(document.createTextNode(txt))
-   document.body.appendChild(el)
+function loadAudio(room) {
+   loadAudioResonance(room)
 }
 
-
-// agendaLoaded is called when the program agenda has been loaded from the server.
-// It processes the agenda and sets up all of the workers.
-function agendaLoaded(agenda) {
-   //button.innerHTML = "play"
-   //button.disabled = false
-}
-
-function loadAudio(agenda) {
-   loadAudioResonance(agenda)
-}
-
-function loadAudioResonance(agenda) {
-   if(!document.getElementById("roomName")) {
-      console.log("not in a room")
-      return
-   }
-   roomName = document.getElementById("roomName").value
-   if(roomName == "") {
-      console.log("no room")
-      return
-   }
+function loadAudioResonance(room) {
+   let agenda = room.agenda
+   let roomData = {}
 
    agenda.rooms.forEach( function(r) {
-      if(r.name == roomName) {
+      if(r.name == room.roomName) {
          roomData = r
       }
    })
@@ -216,8 +201,8 @@ function loadAudioResonance(agenda) {
    }
 
    let ctx = new AudioContext()
-   scene = new ResonanceAudio(ctx)
-   scene.output.connect(ctx.destination)
+   room.scene = new ResonanceAudio(ctx)
+   room.scene.output.connect(ctx.destination)
 
    let roomDimensions = {
       width: 100,
@@ -234,8 +219,8 @@ function loadAudioResonance(agenda) {
       up: 'transparent'
    }
 
-   scene.setRoomProperties(roomDimensions, roomMaterials)
-   scene.setListenerPosition(listenerPosition.x, listenerPosition.y, 1)
+   room.scene.setRoomProperties(roomDimensions, roomMaterials)
+   room.scene.setListenerPosition(ListenerPosition.x, ListenerPosition.y, 1)
 
    roomData.sources.forEach( function(s) {
       s.tracks.forEach( function(track) {
@@ -246,7 +231,7 @@ function loadAudioResonance(agenda) {
             return
          }
          let elSrc = ctx.createMediaElementSource(el)
-         let src = scene.createSource()
+         let src = room.scene.createSource()
          elSrc.connect(src.input)
 
          src.setPosition(s.location.x, (100-s.location.y), s.location.z)
@@ -343,30 +328,10 @@ function loadAudioResonance(agenda) {
          src.audimanceID = track.id
 
          // forward index the audimance ID
-         tracks[track.id] = src
+         s.tracks[track.id] = src
 
       })
          
    })
 
 }
-
-performanceTime = new PerformanceTime()
-
-window.onload = function() {
-   LoadAgenda(function(agenda) {
-      room = new Room({
-         roomName: "happy trails",
-         agenda: agenda
-      })
-   })
-}
-
-// FIXME:  HACK***HACK***HACK
-// There is an audio context bug in (at least) Chrome which causes the audio
-// context to not release audio files from RAM even after they are stopped and
-// unloaded.  As a workaround, we reload the page to reset the web audio
-// context.
-performanceTime.on('INT-5 min warning', function() {
-   window.location.reload(false)
-})

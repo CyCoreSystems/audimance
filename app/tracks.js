@@ -1,23 +1,23 @@
-var agenda = {}
-var roomName = ''
-var room = {}
-var tracks = {}
-var performanceTime = {}
-var startCue = 'Top of Act 1'
-var SyncTolerance = 3.0 // sec
-var WakeCheckInterval = 6000.0 // ms
+import {PerformanceTime} from './performanceTime.js'
+
+let performanceTime = new PerformanceTime()
+
+export let SyncTolerance = 3.0 // sec
+export let WakeCheckInterval = 6000.0 // ms
 
 function urlFor(t) {
    return '/media/'+ t.audioFiles[1]
 }
 
-function loadAudio() {
+// TrackRoom creates a track-based performance room for legacy browsers which do not support spatialised audio.
+// Instead of spatial mixing, track-based audio allows users to manually mix tracks.
+//
+// It expects there to be checkbox inputs with ID = input-<source ID> and audio tags with ID = audio-<source ID> for each source track to exist in the DOM.
+//
+// It processes the given agenda and sets up all of the workers.
+export function TrackRoom(roomName, agenda) {
+   let roomData;
 
-   if(!document.getElementById("roomName")) {
-      console.log("not in a room")
-      return
-   }
-   roomName = document.getElementById("roomName").value
    if(roomName == "") {
       console.log("no room")
       return
@@ -36,7 +36,7 @@ function loadAudio() {
    /* Howler.js method */
    roomData.sources.forEach( function(s) {
 
-      var input = document.getElementById(s.id)
+      var input = document.getElementById('input-'+s.id)
 
       var el = document.getElementById('audio-'+s.id)
 
@@ -202,54 +202,6 @@ function loadAudio() {
 
          return
       })
-
-
-         // bind toggles
- //        document.getElementById(s.id).addEventListener('change', function(ev) {
-//            src.mute(!ev.currentTarget.checked)
- //        })
- //     })
    })
 }
-
-// agendaLoaded is called when the program agenda has been loaded from the server.
-// It processes the agenda and sets up all of the workers.
-function agendaLoaded(agenda) {
-   var button = document.getElementById("play")
-
-
-   button.innerHTML = "Waiting for Performance"
-
-   performanceTime.once('timeSync', function() {
-      loadAudio()
-   })
-
-   performanceTime.on('timeSync', function cb() {
-      if(performanceTime.sinceCue(startCue) < 0) {
-         return
-      }
-      button.innerHTML = "Live"
-      performanceTime.off('timeSync', cb)
-   })
-}
-
-// loadAgenda loads the performance Agenda and executed
-// agendaLoaded() after it is retrieved
-function loadAgenda() {
-
-   fetch('/agenda.json')
-   .then(function(resp) {
-      return resp.json();
-   })
-   .then(function(j) {
-
-      agenda = j
-      agendaLoaded(j)
-
-   })
-}
-
-performanceTime = new PerformanceTime()
-
-window.onload = loadAgenda
 

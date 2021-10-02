@@ -1,4 +1,8 @@
-class PerformanceTime extends EventEmitter3 {
+import * as EventEmitter from './eventemitter3.js';
+
+export {PerformanceTime as PerformanceTime};
+
+class PerformanceTime extends EventEmitter {
 
    constructor() {
       super()

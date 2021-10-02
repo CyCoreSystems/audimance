@@ -18,9 +18,7 @@ function formatMinuteSeconds(sec) {
 
 window.onload = function() {
    setInterval(function() {
-      let cue = undefined;
-
-      cue = performanceTime.latestCue()
+      let cue = performanceTime.latestCue()
       if (cue !== undefined) {
          document.getElementById("lastCue").innerHTML = cue.cue
 
