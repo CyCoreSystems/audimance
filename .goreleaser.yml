@@ -30,4 +30,8 @@ dockers:
       - 'cycoresystems/audimance:{{ .Tag }}'
       - 'cycoresystems/audimance:{{ .Major }}'
       - 'cycoresystems/audimance:{{ .Major }}.{{ .Minor }}'
-      - 'cycoresystems/audimance:latest
+      - 'cycoresystems/audimance:latest'
+      - 'ghcr.io/cycoresystems/audimance:{{ .Tag }}'
+      - 'ghcr.io/cycoresystems/audimance:{{ .Major }}'
+      - 'ghcr.io/cycoresystems/audimance:{{ .Major }}.{{ .Minor }}'
+      - 'ghcr.io/cycoresystems/audimance:latest'

@@ -1,0 +1,4 @@
+FROM gcr.io/distroless/static
+COPY audimance /go/bin/audimance
+WORKDIR /data
+ENTRYPOINT ["/go/bin/audimance"]
