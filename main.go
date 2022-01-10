@@ -13,6 +13,7 @@ import (
 	"syscall"
 
 	"github.com/CyCoreSystems/audimance/agenda"
+	"github.com/CyCoreSystems/audimance/internal/osc"
 	"github.com/CyCoreSystems/audimance/showtime"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -24,11 +25,17 @@ import (
 var keyFile string
 var certFile string
 
-// addr is the listen address
+// addr is the listen address.
 var addr string
 
-// qlabAddr is the listen address
+// qlabAddr is the listen address.
 var qlabAddr string
+
+// oscAddr is the destination address of the OSC server.
+var oscAddr string
+
+// oscRoomIndex is the index number of the room to be sent to the OSC server.
+var oscRoomIndex int
 
 // debug enables debug mode, which uses local files
 // instead of bundled ones
@@ -59,6 +66,8 @@ func init() {
 	flag.StringVar(&keyFile, "key", "", "TLS key")
 	flag.StringVar(&certFile, "cert", "", "TLS certificate")
 	flag.BoolVar(&debug, "debug", false, "enable debug logging")
+	flag.StringVar(&oscAddr, "osc", "", "Address (<host>:<port>) of an OSC service to configure")
+	flag.IntVar(&oscRoomIndex, "oscroom", 0, "Index number of room to be used as the OSC room")
 }
 
 func main() {
@@ -101,6 +110,12 @@ func main() {
 
 	if debug {
 		e.Logger.SetLevel(log.DEBUG)
+	}
+
+	if oscAddr != "" {
+		if err := osc.SetupPositions(a, oscRoomIndex, oscAddr); err != nil {
+			log.Fatalf("failed to configure OSC positions: %w", err)
+		}
 	}
 
 	// Compile and attach templates

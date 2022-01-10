@@ -1,4 +1,6 @@
-import * as EventEmitter from './eventemitter3.js';
+//var EventEmitter = import("./eventemitter3.js");
+//import * as EventEmitter from './eventemitter3.js'
+const EventEmitter = await import('./eventemitter3.js');
 
 export {PerformanceTime as PerformanceTime};
 
