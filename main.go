@@ -1,8 +1,7 @@
 package main
 
-//go:generate esc -o static.go -ignore \.map$ app
-
 import (
+	"embed"
 	"flag"
 	"fmt"
 	"html/template"
@@ -21,6 +20,9 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/net/websocket"
 )
+
+//go:embed app/*
+var content embed.FS
 
 var keyFile string
 var certFile string
@@ -131,7 +133,7 @@ func main() {
 	})
 
 	// Serve internal javascript files
-	e.GET("/app/*.js", echo.WrapHandler(http.FileServer(FS(false))))
+	e.GET("/app/*.js", echo.WrapHandler(http.FileServer(http.FS(content))))
 
 	// Serve user-supplied assets
 	e.Static("/js", "js")
