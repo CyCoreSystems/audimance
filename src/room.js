@@ -2,6 +2,7 @@
 import * as d3 from 'd3';
 import _ from 'lodash';
 import {ResonanceAudio} from '@3den.club/resonance-audio';
+import NoSleep from 'nosleep.js';
 
 // Local upstream dependencies
 //import defaultExport from './resonance-audio/main.js';
@@ -11,6 +12,7 @@ import {LoadAgenda} from './agenda.js';
 import {PerformanceTime} from './performanceTime.js';
 
 var performanceTime = new PerformanceTime()
+var noSleep = new NoSleep()
 
 // Tunables
 export let AudioMaxDistance = 50
@@ -108,6 +110,9 @@ export class SpatialRoom extends EventTarget {
                console.log("play clicked")
                self.audioLoaded = true
                loadAudio(self)
+
+               // Disable display sleep 
+               noSleep.enable()
 
                // Draw the sound field
                _.bind(self.redraw, self)()

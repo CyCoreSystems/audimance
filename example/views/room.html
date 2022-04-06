@@ -6,17 +6,24 @@
 
 	<title>Audimance - Room {{.Room.LabelText}}</title>
 
+   <link rel="stylesheet" href="/css/room.css">
 </head>
 <body>
 
-	Room {{.Room.LabelText}} <span id="loadStatus">loading</span>
+	<input type="hidden" id="roomName" value="{{.Room.Name}}">
+
+	<div id="audimance-room" style="height:100%;"></div>
 
 	<!-- audio files to be played -->
-	{{range .Room.AllTracks}}
-	<audio id="{{.ID}}" preload="auto">
-		<source src="{{.URI}}" preload="auto" type="audio/ogg; codecs=opus"/>
-	</audio>
-	{{end}}
+	{{ range $src := .Room.Sources }}
+		{{ range $track := .Tracks }}
+			<audio id="audio-{{.ID}}" data-srcid="{{ $src.ID }}" data-id="{{.ID}}" data-cue="{{.Cue}}" data-loadcue="{{.LoadCue}}">
+				{{ range .AudioFiles }}
+				<source src="/media/{{ . }}">
+				{{ end }}
+			</audio>
+		{{ end }}
+	{{ end }}
 
 	<script src="/app/room.js"></script>
 </body>

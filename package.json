@@ -16,6 +16,7 @@
   "dependencies": {
     "@3den.club/resonance-audio": "^1.0.1",
     "d3": "^7.4.2",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "nosleep.js": "^0.12.0"
   }
 }

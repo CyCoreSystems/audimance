@@ -1,0 +1,23 @@
+body {
+	background-color: black;
+}
+
+div#audimance-room {
+  background-color: black;
+
+  /* Make room-space fullscreen */
+  position: fixed;
+  left: 0px;
+  right: 0px;
+  top: 0px;
+  bottom: 0px;
+
+}
+
+.button {
+	font-size: 40px;
+}
+
+.sourceText {
+	font-size: 20px;
+}
