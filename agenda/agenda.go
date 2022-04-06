@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
 
@@ -20,13 +19,13 @@ var fileFormats = []string{"mp3", "m4a", "webm"}
 func New(filename string) (*Agenda, error) {
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to read agenda from file")
+		return nil, fmt.Errorf("failed to read agenda from file: %w", err)
 	}
 
 	a := new(Agenda)
 	err = yaml.Unmarshal(data, a)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to read YAML")
+		return nil, fmt.Errorf("failed to read YAML: %w", err)
 	}
 
 	// If the agenda has its own set of file formats, use them instead of the default
@@ -37,17 +36,17 @@ func New(filename string) (*Agenda, error) {
 	// Generate all IDs
 	for _, c := range a.Cues {
 		if err = c.generateID(); err != nil {
-			return nil, errors.Wrapf(err, "failed to generate cue %s", c.Name)
+			return nil, fmt.Errorf("failed to generate cue %s: %w", c.Name, err)
 		}
 	}
 	for _, r := range a.Rooms {
 		if err = r.generateIDs(a); err != nil {
-			return nil, errors.Wrapf(err, "failed to generate room %s", r.Name)
+			return nil, fmt.Errorf("failed to generate room %s: %w", r.Name, err)
 		}
 	}
 	for _, ann := range a.Announcements {
 		if err = ann.generateID(a); err != nil {
-			return nil, errors.Wrapf(err, "failed to generate announcement %s", ann.Name)
+			return nil, fmt.Errorf("failed to generate announcement %s: %w", ann.Name, err)
 		}
 	}
 	return a, err
@@ -342,7 +341,7 @@ type Track struct {
 // locations).
 func (t *Track) generateID(a *Agenda) error {
 	if t.AudioFilePrefix != "" && len(t.AudioFiles) > 0 {
-		return errors.Errorf("please only specify one of AudioFilePrefix or AudioFiles")
+		return fmt.Errorf("please only specify one of AudioFilePrefix or AudioFiles")
 	}
 
 	// Calculate AudioFiles from prefix, if we are given one
@@ -353,7 +352,7 @@ func (t *Track) generateID(a *Agenda) error {
 	}
 
 	if len(t.AudioFiles) < 1 {
-		return errors.Errorf("track must have audio files (cue %s)", t.Cue)
+		return fmt.Errorf("track must have audio files (cue %s)", t.Cue)
 	}
 
 	// TODO: attempt to generate required files if they are missing
@@ -363,14 +362,14 @@ func (t *Track) generateID(a *Agenda) error {
 		for _, fn := range t.AudioFiles {
 			f, err := os.Open(fmt.Sprintf("media/%s", fn))
 			if err != nil {
-				return errors.Wrapf(err, "failed to open track audio file media/%s", fn)
+				return fmt.Errorf("failed to open track audio file media/%s: %w", fn, err)
 			}
 			fInfo, err := f.Stat()
 			if err != nil {
-				return errors.Wrapf(err, "failed to stat audio file media/%s", fn)
+				return fmt.Errorf("failed to stat audio file media/%s: %w", fn, err)
 			}
 			if fInfo.Size() == 0 {
-				return errors.Errorf("track audio file media/%s has no data", fn)
+				return fmt.Errorf("track audio file media/%s has no data: %w", fn, err)
 			}
 		}
 	}

@@ -1,8 +1,10 @@
 // Upstream dependencies
-import * as d3 from './d3.js';
-import * as _ from './lodash.min.js';
-import * as ResonanceAudio from './resonance-audio.js';
-import * as EventEmitter from './eventemitter3.js';
+import * as d3 from 'd3';
+import _ from 'lodash';
+import {ResonanceAudio} from '@3den.club/resonance-audio';
+
+// Local upstream dependencies
+//import defaultExport from './resonance-audio/main.js';
 
 // Local dependencies
 import {LoadAgenda} from './agenda.js';
@@ -21,18 +23,18 @@ export let ListenerPosition = {
    y: 50
 }
 
-// Room provides a d3-based view containing a reticle for locating the listener in a field of audio sources.
+// SpatialRoom provides a d3-based view containing a reticle for locating the listener in a field of audio sources.
 // This room will play spatialised audio synchronised to an Audimance performance server.
 // There must exist in the DOM a `<div id="audimance-room"></div>` for it to insert its SVG.
 // 
 // It should be passed an object containing an `agenda` and a `roomName` for a room contained within that agenda.
 // ex:
-//      room = new Room({
+//      room = new SpatialRoom({
 //         roomName: "happy trails",
 //         agenda: agenda
 //      })
 //
-export class Room extends EventEmitter {
+export class SpatialRoom extends EventTarget {
 
    constructor(cfg) {
       super()
@@ -41,58 +43,35 @@ export class Room extends EventEmitter {
 
       if(!cfg || typeof(cfg) != "object") {
          cfg = {}
-         console.log("Room: requires a configuration object as an argument")
+         console.log("SpatialRoom: requires a configuration object as an argument")
          return
       }
       if(cfg.roomName == "") {
-         console.log("Room: no room")
+         console.log("SpatialRoom: no room")
          return
       }
       this.roomName = cfg.roomName
 
       if(!cfg.agenda || typeof(cfg.agenda) != "object") {
-         console.log("Room: no agenda")
+         console.log("SpatialRoom: no agenda")
          return
       }
       this.agenda = cfg.agenda
 
       this.el = document.getElementById("audimance-room")
       if(!this.el) {
-         console.log("Room: no 'audimance-room' identified element found")
+         console.log("SpatialRoom: no 'audimance-room' identified element found")
          return
       }
 
+      this.svg = d3.select(this.el).append("svg")
+
       this.scene = {}
 
-      this.constructRoom()
+      this.redraw()
 
       // Redraw sound field when the screen is resized
       window.addEventListener('resize', _.bind(this.redraw, this))
-   }
-
-   constructRoom() {
-      let self = this
-
-      self.svg = d3.select(self.el).append("svg")
-
-      // Handle listener position changes by click
-      self.svg.on('click', function() {
-
-            // Handle listener position changes by click
-            let point = d3.clientPoint(this, d3.event)
-
-            ListenerPosition.x = self.rScaleX(point[0])
-            ListenerPosition.y = self.rScaleY(point[1])
-
-            // Subsequent presses change the listener position
-            console.log("changing listener position to: " + ListenerPosition.x + "," + ListenerPosition.y)
-            //Howler.pos(x,y,1)
-            self.scene.setListenerPosition(ListenerPosition.x, ListenerPosition.y, 1)
-
-            _.bind(self.redraw, self)()
-         })
-
-      self.redraw()
    }
 
    redraw() {
@@ -101,17 +80,18 @@ export class Room extends EventEmitter {
       let width = this.el.clientWidth
       let height = this.el.clientHeight
 
+      // Resize SVG frame to match containing div
+      self.svg
+         .attr("width", width)
+         .attr("height", height)
+
+      // Determine scale based on 100x100 index
       self.scaleX = d3.scaleLinear().domain([0,100]).range([0,width])
       self.rScaleX = d3.scaleLinear().domain([0,width]).range([0,100])
       self.scaleY = d3.scaleLinear().domain([0,100]).range([0,height])
       self.rScaleY = d3.scaleLinear().domain([0,height]).range([0,100])
 
       console.log("redrawing", width, height)
-
-      // Resize SVG frame
-      self.svg
-         .attr("width", width)
-         .attr("height", height)
 
       if(!self.audioLoaded) {
          // Draw play button
@@ -201,7 +181,7 @@ function loadAudioResonance(room) {
    }
 
    let ctx = new AudioContext()
-   room.scene = new ResonanceAudio(ctx)
+   room.scene = new window.ResonanceAudio(ctx)
    room.scene.output.connect(ctx.destination)
 
    let roomDimensions = {
@@ -221,6 +201,23 @@ function loadAudioResonance(room) {
 
    room.scene.setRoomProperties(roomDimensions, roomMaterials)
    room.scene.setListenerPosition(ListenerPosition.x, ListenerPosition.y, 1)
+
+   // Update listener position changes by click
+   room.svg.on('click', function(event) {
+
+      // Handle listener position changes by click
+      let point = d3.pointer(event, room.svg)
+
+      ListenerPosition.x = room.rScaleX(point[0])
+      ListenerPosition.y = room.rScaleY(point[1])
+
+      // Subsequent presses change the listener position
+      console.log("changing listener position to: " + ListenerPosition.x + "," + ListenerPosition.y)
+      //Howler.pos(x,y,1)
+      room.scene.setListenerPosition(ListenerPosition.x, ListenerPosition.y, 1)
+
+      _.bind(room.redraw, room)()
+   })
 
    roomData.sources.forEach( function(s) {
       s.tracks.forEach( function(track) {
@@ -286,7 +283,7 @@ function loadAudioResonance(room) {
          }
 
          let lastSync = Date.now()
-         performanceTime.on('timeSync', function() {
+         performanceTime.addEventListener('timeSync', function() {
             resync()
             return
          })

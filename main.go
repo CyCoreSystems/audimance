@@ -17,11 +17,10 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
-	"github.com/pkg/errors"
 	"golang.org/x/net/websocket"
 )
 
-//go:embed app/*
+//go:embed all:app/*
 var content embed.FS
 
 var keyFile string
@@ -110,6 +109,15 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
+	fList, err := content.ReadDir("app/_snowpack/pkg")
+	if err != nil {
+		log.Fatal("failed to read directory:", err)
+	}
+
+	for _, f := range fList {
+		log.Printf("file: %s", f.Name())
+	}
+
 	if debug {
 		e.Logger.SetLevel(log.DEBUG)
 	}
@@ -133,7 +141,7 @@ func main() {
 	})
 
 	// Serve internal javascript files
-	e.GET("/app/*.js", echo.WrapHandler(http.FileServer(http.FS(content))))
+	e.GET("/app/*", echo.WrapHandler(http.FileServer(http.FS(content))))
 
 	// Serve user-supplied assets
 	e.Static("/js", "js")
@@ -278,7 +286,7 @@ func performanceTime(c echo.Context) error {
 
 			err := websocket.JSON.Send(ws, ann)
 			if err != nil {
-				ctx.Logger().Error(errors.Wrap(err, "failed to send announcement"))
+				ctx.Logger().Error(fmt.Errorf("failed to send announcement: %w", err))
 				break
 			}
 		}

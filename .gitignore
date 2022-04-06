@@ -2,3 +2,5 @@
 /media
 /static.go
 /vendor/
+/app/
+/node_modules/

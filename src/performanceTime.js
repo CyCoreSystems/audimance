@@ -1,10 +1,10 @@
 //var EventEmitter = import("./eventemitter3.js");
 //import * as EventEmitter from './eventemitter3.js'
-const EventEmitter = await import('./eventemitter3.js');
+//const EventEmitter = await import('./eventemitter3.js');
 
 export {PerformanceTime as PerformanceTime};
 
-class PerformanceTime extends EventEmitter {
+class PerformanceTime extends EventTarget {
 
    constructor() {
       super()
@@ -135,11 +135,15 @@ class PerformanceTime extends EventEmitter {
          }
 
          if (t.cause == "cue") {
-            self.emit(cues[cues.length-1].cue)
-            self.emit('cueChange')
+            self.dispatchEvent(new Event(cues[cues.length-1].cue))
+            self.dispatchEvent(new Event('cueChange'))
+
+            //self.ee.emit(cues[cues.length-1].cue)
+            //self.ee.emit('cueChange')
             console.log("received cue: "+ cues[cues.length-1].cue)
          } else {
-            self.emit("timeSync")
+            //self.ee.emit("timeSync")
+            self.dispatchEvent(new Event('timeSync'))
          }
       })
    }

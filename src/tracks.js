@@ -67,7 +67,7 @@ export function TrackRoom(roomName, agenda) {
 
       // Handle wake up resync by resetting source and position
       var lastSync = Date.now()
-      performanceTime.on('timeSync', function() {
+      performanceTime.addEventListener('timeSync', function() {
          var diff = Math.abs(Date.now() - lastSync)
          lastSync = Date.now()
 
@@ -182,7 +182,7 @@ export function TrackRoom(roomName, agenda) {
          return
       })
 
-      performanceTime.on('cueChange', function cb() {
+      performanceTime.addEventListener('cueChange', function cb() {
 
          console.log("cue change")
          el.volume = 0

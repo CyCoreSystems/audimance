@@ -1,12 +1,12 @@
 package showtime
 
 import (
+	"fmt"
 	"net"
 	"sync"
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -114,11 +114,11 @@ func (s *Service) remove(sub *Subscription) {
 func (s *Service) Run(qlabAddr string) error {
 	addr, err := net.ResolveUDPAddr("udp", qlabAddr)
 	if err != nil {
-		return errors.Wrap(err, "failed to parse cue listener address")
+		return fmt.Errorf("failed to parse cue listener address: %w", err)
 	}
 	conn, err := net.ListenUDP("udp", addr)
 	if err != nil {
-		return errors.Wrap(err, "failed to listen on UDP port")
+		return fmt.Errorf("failed to listen on UDP port: %w", err)
 	}
 	defer conn.Close()
 	go s.processUDP(conn)
@@ -163,7 +163,7 @@ func (s *Service) processUDP(conn *net.UDPConn) {
 		n, err := conn.Read(buf)
 		if err != nil {
 			// TODO: handle failure; reconnect
-			s.Echo.Logger.Error(errors.Wrap(err, "failed to read from UDP port"))
+			s.Echo.Logger.Error(fmt.Errorf("failed to read from UDP port: %w", err))
 			return
 		}
 

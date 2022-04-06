@@ -7,7 +7,6 @@ require (
 	github.com/hypebeast/go-osc v0.0.0-20210408213458-3287e1838f40
 	github.com/labstack/echo/v4 v4.6.2
 	github.com/labstack/gommon v0.3.1
-	github.com/pkg/errors v0.9.1
 	golang.org/x/net v0.0.0-20220107192237-5cfca573fb4d
 	gopkg.in/yaml.v2 v2.4.0
 )
