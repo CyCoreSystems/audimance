@@ -33,7 +33,6 @@ export function TrackRoom(roomName, agenda) {
       return
    }
 
-   /* Howler.js method */
    roomData.sources.forEach( function(s) {
 
       var input = document.getElementById('input-'+s.id)
@@ -126,7 +125,7 @@ export function TrackRoom(roomName, agenda) {
          var now = performanceTime.sinceLatestTrackCue(s)
          
          // Check to see if we have the chunk we need
-         for(i=0; i<el.buffered.length; i++) {
+         for(let i=0; i<el.buffered.length; i++) {
             if(el.buffered.start(i) > now) {
                // segment starts after our interesting time
                console.log("start is too late")
