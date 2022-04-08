@@ -60,14 +60,31 @@ The main index, however, has the entire Agenda available at its data root.
 
 ### Javascript helpers
 
-The core of the javascript side of Audimance consists of the `performanceTime` package.
+The `/app/app.js` file is bundled with the binary application and can be loaded
+from that location in your HTML files.  It is exposed as an ES6 module.
+Inside this module, there are a few key components:
+
+ - `LoadAgenda` (function), which loads and processes the `agenda.yaml` file for
+   use by the Rooms and optionally custom Javascript.
+ - `SpatialRoom` (class), which creates and manages a room with spatialised
+   sounds placed as configured by the `agenda.yaml` file, and scaled to the
+   size of the HTML container with ID `audimance-room`.
+ - `TrackRoom` (class), which binds manually-constructed `<audio>` tags to their
+   corresponding sources, keeping them in sync with the performance.
+ - `PerformanceTime` (class), which keeps track of cues and timings of the
+   performance.  The rooms use this internally, but it is exposed in case the
+   developer wishes to create their own actions on certain events.
+
+#### PerformanceTime
 
 This package receives continuous ticker notifications and cue announcements
 which enable Audimance to keep in sync with the live performance, to the
 fraction of a second, continuously synchronizing.
 
-The builtin `room.js` file provides a complete application for playback and
-control of a performance.  You need only load it from your room's HTML, provide
+#### SpatialRoom
+
+The `SpatialRoom` class provides a complete application for playback and
+interaction with a performance.  You need only load it from your room's HTML, provide
 it a `<div id="audimance-map"></div>` to fill, and it will handle everything
 else.
 
@@ -98,5 +115,4 @@ Audimance accepts cues on a UDP port (9001, by default) to be fed from external
 synchronization sources, such as from Figure53's
 [QLab](https://figure53.com/qlab/).  It expects the cue label to be received in
 case-sensitive plain text on the UDP port to trigger the cue.
-
 
