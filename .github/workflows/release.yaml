@@ -9,7 +9,10 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: '14'
 
     - name: Set up Buildx
       id: buildx
@@ -32,6 +35,9 @@ jobs:
         registry: ghcr.io
         username: ${{ github.repository_owner }}
         password: ${{ secrets.GITHUB_TOKEN }}
+
+    - run: npm install
+    - run: npm build
 
     - name: GoReleaser
       uses: goreleaser/goreleaser-action@v2.8.0
