@@ -36,7 +36,7 @@ jobs:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - run: npm install
+    - run: npm ci
     - run: npm build
 
     - name: GoReleaser
