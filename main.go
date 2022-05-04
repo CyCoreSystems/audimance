@@ -120,6 +120,10 @@ func main() {
 
 	if debug {
 		e.Logger.SetLevel(log.DEBUG)
+
+		for _, room := range a.Rooms {
+			e.Logger.Debug("Room:", room.ID)
+		}
 	}
 
 	if oscAddr != "" {
