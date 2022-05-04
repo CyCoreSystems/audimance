@@ -240,9 +240,17 @@ function loadAudioResonance(room) {
          src.setRolloff("linear")
          src.setMaxDistance(AudioMaxDistance)
 
-         // Toggle play once to initial mobile playback
-         el.play()
-         el.pause()
+         // Toggle play once to initialise mobile playback
+         let playPromise = el.play()
+         if (playPromise !== undefined) {
+            playPromise.then(_ => {
+               el.pause()
+            })
+            .catch(error => {
+               console.log("pause for track "+track.id+" failed")
+               console.error(error, error.stack)
+            })
+         }
 
          let loaded = false
          function loadOnce() {
