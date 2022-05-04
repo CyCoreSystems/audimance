@@ -1,6 +1,8 @@
-performanceTime = new PerformanceTime()
+import {PerformanceTime} from './performanceTime.js';
 
-function triggerCue(id) {
+let performanceTime = new PerformanceTime()
+
+export function TriggerCue(id) {
    fetch('/cues/'+id, {
       method: 'PUT'
    })
@@ -16,13 +18,13 @@ function formatMinuteSeconds(sec) {
    return `${min}:${sec}`
 }
 
-window.onload = function() {
+export function BindCueStatus(lastCueId, sinceLastCueId) {
    setInterval(function() {
       let cue = performanceTime.latestCue()
       if (cue !== undefined) {
-         document.getElementById("lastCue").innerHTML = cue.cue
+         document.getElementById(lastCueId).innerHTML = cue.cue
 
-         document.getElementById("sinceLastCue").innerHTML = formatMinuteSeconds(performanceTime.sinceCue(cue.cue))
+         document.getElementById(sinceLastCueId).innerHTML = formatMinuteSeconds(performanceTime.sinceCue(cue.cue))
       }
 
    }, 1000)
