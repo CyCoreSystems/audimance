@@ -37,7 +37,7 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - run: npm ci
-    - run: npm build
+    - run: npm run build
 
     - name: GoReleaser
       uses: goreleaser/goreleaser-action@v2.8.0
