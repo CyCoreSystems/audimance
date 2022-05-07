@@ -27,6 +27,8 @@ class PerformanceTime extends EventTarget {
    // latestCuedTrack returns the latest track which has been queued for the
    // given source.  Tracks from cues which have not yet been triggered will be
    // discarded.
+   // NOTE: administrators should be able to go back in time, so while the a later track
+   // may have been cued _earlier_, we should return the wall-clock-time-latest-cued track.
    latestCuedTrack(src) {
       if(!src || !src.tracks || src.tracks.length < 1) {
          return undefined
@@ -37,7 +39,13 @@ class PerformanceTime extends EventTarget {
       var latestCuedTrack = null
       src.tracks.forEach(function(track) {
          if(that.sinceCue(track.cue) >= 0) {
-            latestCuedTrack = track
+            // if this track is _also_ more recently-cued that our existing latestCuedTrack,
+            // update our latestCuedTrack to this one.
+            // This is necessary so that administrators can go back in time in the case of error.
+            if (latestCuedTrack == null ||
+                that.sinceCue(latestCuedTrack.cue) > that.sinceCue(track.cue) ) {
+               latestCuedTrack = track
+            }
          }
       })
       return latestCuedTrack
