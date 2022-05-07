@@ -6,7 +6,7 @@ export let SyncTolerance = 3.0 // sec
 export let WakeCheckInterval = 6000.0 // ms
 
 function urlFor(t) {
-   return '/media/'+ t.audioFiles[1]
+   return t.audioFiles[1]
 }
 
 // TrackRoom creates a track-based performance room for legacy browsers which do not support spatialised audio.

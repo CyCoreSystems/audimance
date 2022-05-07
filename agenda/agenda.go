@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -33,6 +34,11 @@ func New(filename string) (*Agenda, error) {
 		fileFormats = a.Formats
 	}
 
+	// If there is no MediaBaseURL, use "media/"
+	if a.MediaBaseURL == "" {
+		a.MediaBaseURL = "/media/"
+	}
+
 	// Generate all IDs
 	for _, c := range a.Cues {
 		if err = c.generateID(); err != nil {
@@ -43,6 +49,8 @@ func New(filename string) (*Agenda, error) {
 		if err = r.generateIDs(a); err != nil {
 			return nil, fmt.Errorf("failed to generate room %s: %w", r.Name, err)
 		}
+
+		r.populateDefaults()
 	}
 	for _, ann := range a.Announcements {
 		if err = ann.generateID(a); err != nil {
@@ -78,6 +86,11 @@ type Agenda struct {
 	//
 	// This setting is optional but recommended.
 	PerformanceURL string `json:"performanceURL" yaml:"performanceURL"`
+
+	// MediaBaseURL string `json:"mediaBaseURL" yaml:"mediaBaseURL"`
+	// The default is simply `/media/`, but this can be set to whatever roomTracks
+	// URL your media should be sourced from.
+	MediaBaseURL string `json:"mediaBaseURL" yaml:"mediaBaseURL"`
 
 	// RemoteMedia indicates that the media files are not stored on the same
 	// server, and so not validation should be performed, and no modifications
@@ -189,6 +202,15 @@ type Room struct {
 	// RoomTracks is a list of audio tracks to be played in a room, sourced from
 	// everywhere.  This is generally exclusive with Sources.
 	RoomTracks []*Track `json:"roomTracks" yaml:"roomTracks"`
+
+	// Surfaces describes the surfaces of the room.
+	// Valid surface types are:  'brick-bare', 'curtain-heavy', 'marble', 'glass-thin', 'grass', and 'transparent'
+	// The default is that every surface is 'grass'.
+	Surfaces Surfaces `json:"surfaces" yaml:"surfaces"`
+
+	// Dimensions describes the dimensions of the room, in meters.
+	// The default is 100x100x100.
+	Dimensions Dimensions `json:"dimensions" yaml:"dimensions"`
 }
 
 func (r *Room) generateIDs(a *Agenda) error {
@@ -205,6 +227,37 @@ func (r *Room) generateIDs(a *Agenda) error {
 	}
 
 	return nil
+}
+
+func (r *Room) populateDefaults() {
+	if r.Surfaces.Left == "" {
+		r.Surfaces.Left = "grass"
+	}
+	if r.Surfaces.Right == "" {
+		r.Surfaces.Right = "grass"
+	}
+	if r.Surfaces.Front == "" {
+		r.Surfaces.Front = "grass"
+	}
+	if r.Surfaces.Back == "" {
+		r.Surfaces.Back = "grass"
+	}
+	if r.Surfaces.Up == "" {
+		r.Surfaces.Up = "grass"
+	}
+	if r.Surfaces.Down == "" {
+		r.Surfaces.Down = "grass"
+	}
+
+	if r.Dimensions.Depth == 0 {
+		r.Dimensions.Depth = 100
+	}
+	if r.Dimensions.Height == 0 {
+		r.Dimensions.Height = 100
+	}
+	if r.Dimensions.Width == 0 {
+		r.Dimensions.Width = 100
+	}
 }
 
 func (r *Room) generateID() error {
@@ -251,6 +304,30 @@ func (r *Room) AllTracks() (out []*Track) {
 	}
 
 	return
+}
+
+// Dimensions describe the dimensions of a space.
+type Dimensions struct {
+	// Width is the left-to-right dimension.
+	Width  float64 `json:"width" yaml:"width"`
+
+	// Height is the up-to-down dimension (the height of a room).
+	Height float64 `json:"height" yaml:"height"`
+
+	// Depth is the forward-to-backward dimension.
+	Depth  float64 `json:"depth" yaml:"depth"`
+}
+
+// Surfaces describe the surface material of a room.
+// Valid surface types are:  'brick-bare', 'curtain-heavy', 'marble', 'glass-thin', 'grass', and 'transparent'
+// The default is that every surface is 'grass'.
+type Surfaces struct {
+	Left  string `json:"left" yaml:"left"`
+	Right string `json:"right" yaml:"right"`
+	Front string `json:"front" yaml:"front"`
+	Back  string `json:"back" yaml:"back"`
+	Down  string `json:"down" yaml:"down"`
+	Up    string `json:"up" yaml:"up"`
 }
 
 // Source describes a unique audio sequence and location
@@ -320,7 +397,7 @@ type Track struct {
 	KillCue string `json:"killCue" yaml:"killCue"`
 
 	// AudioFilePrefix is the path/name prefix of the audio file locations,
-	// relative to the filesystem `media/` directory.  The file extension will
+	// relative to the mediaBaseURL.  The file extension will
 	// be calculated based on the supplied format list of the agenda.
 	AudioFilePrefix string `json:"audioFilePrefix" yaml:"audioFilePrefix"`
 
@@ -347,7 +424,7 @@ func (t *Track) generateID(a *Agenda) error {
 	// Calculate AudioFiles from prefix, if we are given one
 	if t.AudioFilePrefix != "" {
 		for _, f := range fileFormats {
-			t.AudioFiles = append(t.AudioFiles, fmt.Sprintf("%s.%s", strings.TrimSuffix(t.AudioFilePrefix, "."), f))
+			t.AudioFiles = append(t.AudioFiles, filepath.Join(a.MediaBaseURL, fmt.Sprintf("%s.%s", strings.TrimSuffix(t.AudioFilePrefix, "."), f)))
 		}
 	}
 
@@ -360,16 +437,16 @@ func (t *Track) generateID(a *Agenda) error {
 	// Validate each of the referenced audio files
 	if !a.RemoteMedia {
 		for _, fn := range t.AudioFiles {
-			f, err := os.Open(fmt.Sprintf("media/%s", fn))
+			f, err := os.Open(strings.TrimPrefix(fn, "/"))
 			if err != nil {
-				return fmt.Errorf("failed to open track audio file media/%s: %w", fn, err)
+				return fmt.Errorf("failed to open track audio file %s: %w", fn, err)
 			}
 			fInfo, err := f.Stat()
 			if err != nil {
-				return fmt.Errorf("failed to stat audio file media/%s: %w", fn, err)
+				return fmt.Errorf("failed to stat audio file %s: %w", fn, err)
 			}
 			if fInfo.Size() == 0 {
-				return fmt.Errorf("track audio file media/%s has no data: %w", fn, err)
+				return fmt.Errorf("track audio file %s has no data: %w", fn, err)
 			}
 		}
 	}
