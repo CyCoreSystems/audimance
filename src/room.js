@@ -20,9 +20,36 @@ export let AudioRolloff = "linear" // linear, logarithmic, exponential
 export let SyncTolerance = 3.0 // sec
 export let WakeCheckInterval = 6000.0 // ms
 
-export let ListenerPosition = {
-   x: 50,
-   y: 50
+class Position {
+   constructor(x,y,z, width, height, depth) {
+      this.x = x
+      this.y = y
+      this.z = z
+      this.width = width
+      this.height = height
+      this.depth = depth
+   }
+
+   fromClick(clickX, clickY) {
+      this.x = clickX - (this.width/2)
+      this.z = (this.depth/2) - clickY
+   }
+
+   toSVG() {
+      return {
+         x: this.x + (this.width/2),
+         y: (this.depth/2) - this.z
+      }
+   }
+
+   // we store in native audio format
+   toAudio() {
+      return {
+         x: this.x,
+         y: this.y,
+         z: this.z
+      }
+   }
 }
 
 // SpatialRoom provides a d3-based view containing a reticle for locating the listener in a field of audio sources.
@@ -40,6 +67,8 @@ export class SpatialRoom extends EventTarget {
 
    constructor(cfg) {
       super()
+
+      let self = this
 
       this.audioLoaded = false
 
@@ -70,6 +99,23 @@ export class SpatialRoom extends EventTarget {
 
       this.scene = {}
 
+      this.data = {}
+
+      cfg.agenda.rooms.forEach( function(r) {
+         if(r.name == cfg.roomName) {
+            self.data = r
+         }
+      })
+      if(!this.data.name) {
+         console.log("no room matched")
+         return
+      }
+
+      // DEBUG
+      window.room = this
+
+      this.listenerPosition = new Position(0, 0, 0, this.data.dimensions.width, this.data.dimensions.height, this.data.dimensions.depth)
+
       this.redraw()
 
       // Redraw sound field when the screen is resized
@@ -87,11 +133,11 @@ export class SpatialRoom extends EventTarget {
          .attr("width", width)
          .attr("height", height)
 
-      // Determine scale based on 100x100 index
-      self.scaleX = d3.scaleLinear().domain([0,100]).range([0,width])
-      self.rScaleX = d3.scaleLinear().domain([0,width]).range([0,100])
-      self.scaleY = d3.scaleLinear().domain([0,100]).range([0,height])
-      self.rScaleY = d3.scaleLinear().domain([0,height]).range([0,100])
+      // Determine scale based on room dimensions
+      self.scaleX = d3.scaleLinear().domain([0,self.data.dimensions.width]).range([0,width])
+      self.rScaleX = d3.scaleLinear().domain([0,width]).range([0,self.data.dimensions.width])
+      self.scaleY = d3.scaleLinear().domain([0,self.data.dimensions.height]).range([0,height])
+      self.rScaleY = d3.scaleLinear().domain([0,height]).range([0,self.data.dimensions.height])
 
       console.log("redrawing", width, height)
 
@@ -102,10 +148,10 @@ export class SpatialRoom extends EventTarget {
             .attr("fill", "lightgrey")
             .attr("class", "button")
             .attr("text-anchor", "middle")
-            .attr("x", self.scaleX(50))
-            .attr("y", self.scaleY(50))
-            .attr("width", self.scaleX(100))
-            .attr("height", self.scaleY(100))
+            .attr("x", self.scaleX(self.data.dimensions.width/2))
+            .attr("y", self.scaleY(self.data.dimensions.depth/2))
+            .attr("width", self.scaleX(self.data.dimensions.width))
+            .attr("height", self.scaleY(self.data.dimensions.depth))
             .on("click", function(ev) {
                console.log("play clicked")
                self.audioLoaded = true
@@ -124,7 +170,10 @@ export class SpatialRoom extends EventTarget {
       }
 
       // Add listener position indicator
-      let loc = self.svg.selectAll('circle.listener').data([ListenerPosition])
+      let loc = self.svg.selectAll('circle.listener').data([{
+         x: self.listenerPosition.toSVG().x,
+         y: self.listenerPosition.toSVG().y, // note we are presenting depth (z) as y-axis for this display
+      }])
 
       loc
          .enter().append("circle")
@@ -137,7 +186,7 @@ export class SpatialRoom extends EventTarget {
             .attr("cy", function(d) { return self.scaleY(d.y) })
 
       // Add source indicators
-      let sources = this.svg.selectAll("circle.source").data(self.agenda.rooms[0].sources)
+      let sources = this.svg.selectAll("circle.source").data(self.data.sources)
 
       sources
          .enter().append("circle")
@@ -146,12 +195,12 @@ export class SpatialRoom extends EventTarget {
             .attr("fill", function(d, i) { return d3.schemeCategory10[i] })
             .text(function(d) { return d.name })
          .merge(sources)
-            .attr("cx", function(d) { return self.scaleX(d.location.x) })
-            .attr("cy", function(d) { return self.scaleY(100-d.location.y) })
+            .attr("cx", function(d) { return self.scaleX(d.location.x + self.data.dimensions.width/2) })
+            .attr("cy", function(d) { return self.scaleY(self.data.dimensions.depth/2-d.location.z) })
 
       // Add source labels
       let labels = self.svg.selectAll("text.sourceText")
-         .data(self.agenda.rooms[0].sources)
+         .data(self.data.sources)
 
       labels
          .enter().append("text")
@@ -160,8 +209,8 @@ export class SpatialRoom extends EventTarget {
             .attr("fill", "grey")
             .text(function(d) { return d.name })
          .merge(labels)
-            .attr("x", function(d) { return self.scaleX(d.location.x) })
-            .attr("y", function(d) { return self.scaleY(100-d.location.y) })
+            .attr("x", function(d) { return self.scaleX(d.location.x + self.data.dimensions.width/2) })
+            .attr("y", function(d) { return self.scaleY(self.data.dimensions.depth/2-d.location.z) })
             .attr("dy", "2em")
    }
 }
@@ -173,39 +222,13 @@ function loadAudio(room) {
 
 function loadAudioResonance(room) {
    let agenda = room.agenda
-   let roomData = {}
-
-   agenda.rooms.forEach( function(r) {
-      if(r.name == room.roomName) {
-         roomData = r
-      }
-   })
-   if(!roomData.name) {
-      console.log("no room matched")
-      return
-   }
-
    let ctx = new AudioContext()
+
    room.scene = new window.ResonanceAudio(ctx)
    room.scene.output.connect(ctx.destination)
 
-   let roomDimensions = {
-      width: 100,
-      height: 100,
-      depth: 10,
-   }
-
-   let roomMaterials = {
-      left: 'grass',
-      right: 'grass',
-      front: 'grass',
-      back: 'grass',
-      down: 'grass',
-      up: 'transparent'
-   }
-
-   room.scene.setRoomProperties(roomDimensions, roomMaterials)
-   room.scene.setListenerPosition(ListenerPosition.x, ListenerPosition.y, 1)
+   room.scene.setRoomProperties(room.data.dimensions, room.materials)
+   room.scene.setListenerPosition(0,0,0)
 
    // Update listener position changes by click
    room.svg.on('click', function(event) {
@@ -213,135 +236,256 @@ function loadAudioResonance(room) {
       // Handle listener position changes by click
       let point = d3.pointer(event, room.svg)
 
-      ListenerPosition.x = room.rScaleX(point[0])
-      ListenerPosition.y = room.rScaleY(point[1])
+      console.log("got click at: "+ point[0] +","+ point[1])
+
+      // scale and translate point coordinates to room coordinates (relative to center-of-room)
+      room.listenerPosition.fromClick(room.rScaleX(point[0]), room.rScaleY(point[1]))
 
       // Subsequent presses change the listener position
-      console.log("changing listener position to: " + ListenerPosition.x + "," + ListenerPosition.y)
-      //Howler.pos(x,y,1)
-      room.scene.setListenerPosition(ListenerPosition.x, ListenerPosition.y, 1)
+      console.log("changing listener position to: " + room.listenerPosition.toSVG().x + "," + room.listenerPosition.toSVG().y)
+      
+      // **NOTE**:  listener position is as offset from the CENTER of the room, not the origin
+      // Unlike room dimensions, these are x, y, z.
+      room.scene.setListenerPosition(
+         room.listenerPosition.toAudio().x,
+         room.listenerPosition.toAudio().y,
+         room.listenerPosition.toAudio().z,
+      )
 
       _.bind(room.redraw, room)()
    })
 
-   roomData.sources.forEach( function(s) {
-      s.tracks.forEach( function(track) {
+   room.sources = []
 
-         let el = document.getElementById("audio-" + track.id)
-         if(!el) {
-            console.log("no media element matching " + track.id)
-            return
+   room.data.sources.forEach( function(s) {
+         room.sources[s.id] = new Source(ctx, room, s)
+   })
+}
+
+class Track {
+   constructor(ctx, room, index, s, data) {
+      let self = this
+
+      let el = document.getElementById("audio-" + s.id + "-" + index)
+      if(!el) {
+         console.error("no media element matching audio-" + s.id + "-" + index)
+         return
+      }
+      console.log("configuring track audio-"+s.id+"-"+index)
+
+      self.el = el
+      self.src = s
+      self.myCue = data.cue
+      self.loaded = false
+
+      /*
+      self.baseURI = "/media/"
+	   if(room.agenda.mediaBaseURL != "") {
+         self.baseURI = room.agenda.mediaBaseURL
+      }
+      */
+
+      // Set the initial source for this track
+      // this didn't work earlier; need to check to allow simpler HTML
+      /*
+      for ( let i = 0; i < data.audioFiles.length; i++ ) {
+         el.getElementsByTagName("source")[i].src = baseURI + data.audioFiles[i]
+      }
+      */
+
+      // Configure the audio mixing characteristics
+      let elSrc = ctx.createMediaElementSource(el)
+      let src = room.scene.createSource()
+      elSrc.connect(src.input)
+
+      // NOTE: position is offset from _CENTER_ of room, not origin
+      //src.setPosition(s.location.x-(room.dimensions.width/2),s.location.y-(room.dimensions.height/2),s.location.z-(room.dimensions.depth/2))
+      src.setPosition(s.location.x,s.location.y,s.location.z)
+
+      src.setRolloff("linear")
+      src.setMaxDistance(AudioMaxDistance)
+
+      // Toggle play once to initialise mobile playback
+      let playPromise = el.play()
+      if (playPromise !== undefined) {
+         playPromise.then(_ => {
+            el.pause()
+         })
+         .catch(error => {
+            console.error("pause for source "+s.id+" track "+ index + " failed", error, error.stack)
+         })
+      }
+
+      let lastSync = Date.now()
+      performanceTime.addEventListener('timeSync', function() {
+         self.resync()
+         return
+      })
+      
+      el.addEventListener('seeked', function(ev) {
+         console.log('seeked')
+
+         if(self.resync()) {
+            el.volume = 1.0
+            el.play()
          }
-         let elSrc = ctx.createMediaElementSource(el)
-         let src = room.scene.createSource()
-         elSrc.connect(src.input)
 
-         src.setPosition(s.location.x, (100-s.location.y), s.location.z)
-         src.setRolloff("linear")
-         src.setMaxDistance(AudioMaxDistance)
+         return
+      })
 
-         // Toggle play once to initialise mobile playback
-         let playPromise = el.play()
-         if (playPromise !== undefined) {
-            playPromise.then(_ => {
-               el.pause()
-            })
-            .catch(error => {
-               console.log("pause for track "+track.id+" failed")
-               console.error(error, error.stack)
-            })
-         }
-
-         let loaded = false
-         function loadOnce() {
-            if(!loaded && performanceTime.sinceCue(el.dataset.loadcue) > 0) {
-               loaded = true
-               el.load()
-            }
-         }
-
-         // resync audio; if resync returns true, then the audio is synced and ready to be played
-         function resync() {
-            loadOnce()
-
-            let now = performanceTime.sinceCue(el.dataset.cue)
-            if(now < 0) {
-               // not yet queued
-               return false
-            }
-
-            let latestCuedTrack = performanceTime.latestCuedTrack(s)
-            if( !latestCuedTrack || latestCuedTrack.id != track.id ) {
-               el.pause()
-               return false 
-            }
-            if(now > el.duration) {
-               // track has already ended
-               el.pause()
-               return false
-            }
-
-            let diff = Math.abs(now - el.currentTime)
-
-            if(diff > SyncTolerance) {
-
-               console.log(s.name +" out of sync; reseeking.  Diff: " + diff)
-               el.volume = 0
-               el.currentTime = now
-               return false
-            }
-
-            // already synced
-            return true
-         }
-
-         let lastSync = Date.now()
-         performanceTime.addEventListener('timeSync', function() {
-            resync()
-            return
-         })
-         
-         el.addEventListener('seeked', function(ev) {
-            console.log('seeked')
-
-            if(resync()) {
-               el.volume = 1.0
-               el.play()
-            }
-
-            return
-         })
-
-         el.addEventListener('progress', function(ev) {
-
-         })
-
-         el.addEventListener('cueChange', function(ev) {
-            el.volume = 0
-
-            if(resync()) {
-               el.volume = 1.0
-               el.play()
-            }
-         })
-
-         el.addEventListener('loadedmetadata', function(ev) {
-            console.log("loaded metadata")
-            resync()
-            return
-         })
-
-         // store the cue
-         src.audimanceCue = track.cue
-
-         // store the audimance ID so that we may reverse-index it
-         src.audimanceID = track.id
-
-         // forward index the audimance ID
-         s.tracks[track.id] = src
+      el.addEventListener('progress', function(ev) {
 
       })
-         
-   })
+
+      el.addEventListener('loadedmetadata', function(ev) {
+         console.log("loaded metadata")
+         self.resync()
+         return
+      })
+
+   }
+
+   cueChanged() {
+         this.el.volume = 0
+
+         if(this.resync()) {
+            this.el.volume = 1.0
+            this.el.play()
+         }
+   }
+
+   loadOnce() {
+      if(!this.loaded && performanceTime.sinceCue(this.el.dataset.loadcue) > 0) {
+         this.loaded = true
+         this.el.load()
+      }
+   }
+
+   setTrackIndex(n) {
+      console.log("setting track index "+n)
+
+      let self = this
+
+      self.loaded = false
+
+      let srcTrack = self.src.tracks[n]
+      if (srcTrack == undefined ) {
+         console.error("track does not exist")
+         return
+      }
+
+      self.myCue = srcTrack.cue
+
+      for ( let i = 0; i < srcTrack.audioFiles.length; i++ ) {
+         console.log("updating source for "+ self.src.id +" to "+ srcTrack.audioFiles[i])
+         self.el.getElementsByTagName("source")[i].src = srcTrack.audioFiles[i]
+      }
+
+      self.loaded = true
+
+      self.el.load()
+   }
+
+   // resync audio; if resync returns true, then the audio is synced and ready to be played
+   resync() {
+      let self = this
+
+      self.loadOnce()
+
+      let now = performanceTime.sinceCue(self.myCue)
+      if(now < 0) {
+         // not yet queued
+         return false
+      }
+
+      let latestCuedTrack = performanceTime.latestCuedTrack(self.src)
+      if( !latestCuedTrack || latestCuedTrack.cue != self.myCue ) {
+         // not our cue
+         self.el.pause()
+         return false 
+      }
+
+      if(now > self.el.duration) {
+         // track has already ended
+         self.el.pause()
+         return false
+      }
+
+      let diff = Math.abs(now - self.el.currentTime)
+
+      if(diff > SyncTolerance) {
+
+         console.log(self.src.name +" out of sync; reseeking.  Diff: " + diff)
+         self.el.volume = 0
+         self.el.currentTime = now
+         return false
+      }
+
+      // already synced
+      return true
+   }
+}
+
+class Source {
+
+   constructor(ctx, room, src) {
+      let self = this
+
+      this.data = src
+      this.currentCue = ""
+      this.currentTrack = 0
+      this.tracks = []
+
+      this.tracks[0] = new Track(ctx, room, 0, src, src.tracks[0]) // initialise with the first track of this source
+      this.tracks[1] = new Track(ctx, room, 1, src, src.tracks[1]) // initialise with the second track of this source
+
+      performanceTime.addEventListener('cueChange', function() {
+         self.cueChanged()
+      })
+
+      // Make sure we process a timeSync event to set the initial cue on load
+      performanceTime.addEventListener('timeSync', function() {
+         self.cueChanged()
+      },{ once: true})
+   }
+
+   cueChanged() {
+      var self = this
+
+      let currentCue = performanceTime.latestCuedTrack(self.data).cue
+
+      let currentCueIndex = 0
+      for ( let i = 0; i < self.data.tracks.length; i++ ) {
+         if (self.data.tracks[i].cue == currentCue) {
+            currentCueIndex = i
+            break
+         }
+      }
+
+      console.log("cueChange: new cue is "+ currentCue +", index "+ currentCueIndex )
+
+      if (self.tracks[0].myCue == currentCue) {
+         self.tracks[1].setTrackIndex(currentCueIndex+1)
+
+         self.tracks[0].cueChanged()
+         self.tracks[1].cueChanged()
+         return
+      }
+
+      if (self.tracks[1].myCue == currentCue) {
+         self.tracks[0].setTrackIndex(currentCueIndex+1)
+
+         self.tracks[0].cueChanged()
+         self.tracks[1].cueChanged()
+         return
+      }
+
+      // Oops; no one has this cue; give it to the first track
+      self.tracks[0].setTrackIndex(currentCueIndex)
+      self.tracks[1].setTrackIndex(currentCueIndex+1)
+
+      self.tracks[0].cueChanged()
+      self.tracks[1].cueChanged()
+   }
 
 }
