@@ -15,7 +15,12 @@ function formatMinuteSeconds(sec) {
       min = Math.floor(sec/60)
    }
    sec = Math.floor(sec%60)
-   return `${min}:${sec}`
+
+   if (min == 0) {
+      return `${sec}s`
+   }
+
+   return `${min}m ${sec}s`
 }
 
 export function BindCueStatus(lastCueId, sinceLastCueId) {
