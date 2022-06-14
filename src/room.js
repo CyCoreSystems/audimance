@@ -452,7 +452,13 @@ class Source {
    cueChanged() {
       var self = this
 
-      let currentCue = performanceTime.latestCuedTrack(self.data).cue
+      var latestCuedTrack = performanceTime.latestCuedTrack(self.data)
+
+      if ( !latestCuedTrack) {
+         return
+      }
+
+      let currentCue = latestCuedTrack.cue
 
       let currentCueIndex = 0
       for ( let i = 0; i < self.data.tracks.length; i++ ) {
