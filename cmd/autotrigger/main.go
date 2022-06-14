@@ -36,7 +36,7 @@ func main() {
 
 	cueID, err := findCue(cueName)
 	if err != nil {
-		log.Fatalln("failed to find cue: %s", err.Error())
+		log.Fatalf("failed to find cue: %s", err.Error())
 	}
 
 	if err := trigger(cueID); err != nil {
