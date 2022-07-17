@@ -450,6 +450,10 @@ class Source {
    }
 
    cueChanged() {
+      if (!this) {
+         return
+      }
+
       var self = this
 
       var latestCuedTrack = performanceTime.latestCuedTrack(self.data)
