@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"strings"
 	"time"
@@ -429,8 +428,6 @@ func (t *Track) generateID(a *Agenda) error {
 			t.AudioFiles = append(t.AudioFiles, fmt.Sprintf("%s/%s", a.MediaBaseURL, fmt.Sprintf("%s.%s", strings.TrimSuffix(t.AudioFilePrefix, "."), f)))
 		}
 	}
-
-	log.Printf("generated audio URLs based on %q for %q: %+v", a.MediaBaseURL, t.AudioFilePrefix, t.AudioFiles)
 
 	if len(t.AudioFiles) < 1 {
 		return fmt.Errorf("track must have audio files (cue %s)", t.Cue)
