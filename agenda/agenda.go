@@ -5,8 +5,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -38,6 +38,8 @@ func New(filename string) (*Agenda, error) {
 	if a.MediaBaseURL == "" {
 		a.MediaBaseURL = "/media/"
 	}
+
+	a.MediaBaseURL = strings.TrimSuffix(a.MediaBaseURL, "/")
 
 	// Generate all IDs
 	for _, c := range a.Cues {
@@ -424,9 +426,11 @@ func (t *Track) generateID(a *Agenda) error {
 	// Calculate AudioFiles from prefix, if we are given one
 	if t.AudioFilePrefix != "" {
 		for _, f := range fileFormats {
-			t.AudioFiles = append(t.AudioFiles, filepath.Join(a.MediaBaseURL, fmt.Sprintf("%s.%s", strings.TrimSuffix(t.AudioFilePrefix, "."), f)))
+			t.AudioFiles = append(t.AudioFiles, fmt.Sprintf("%s/%s", a.MediaBaseURL, fmt.Sprintf("%s.%s", strings.TrimSuffix(t.AudioFilePrefix, "."), f)))
 		}
 	}
+
+	log.Printf("generated audio URLs based on %q for %q: %+v", a.MediaBaseURL, t.AudioFilePrefix, t.AudioFiles)
 
 	if len(t.AudioFiles) < 1 {
 		return fmt.Errorf("track must have audio files (cue %s)", t.Cue)
