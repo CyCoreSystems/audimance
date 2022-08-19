@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 const (
@@ -23,6 +24,29 @@ const subscriptionBufferSize = 5
 const maxUDPMessageSize = 512
 
 var minUpdateInterval = time.Duration(2) * time.Second
+
+var (
+	metricCueCount prometheus.Counter
+	metricCueQLabCount prometheus.Counter
+	metricSubsCount prometheus.Gauge
+)
+
+func init() {
+	metricCueQLabCount = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "audimance_cue_qlab_total",
+		Help: "Total number of cues received from QLab",
+		})
+
+	metricCueCount = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "audimance_cue_total",
+		Help: "Total number of cues processed",
+	})
+
+	metricSubsCount = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "audimance_subs_count",
+		Help: "Current number of active subscriptions",
+	})
+}
 
 // Time describes the time at which the last Cue occurred
 type Time struct {
@@ -149,6 +173,8 @@ func (s *Service) notify(cause string) {
 		TimePoints: points,
 	}
 
+	metricSubsCount.Set(float64(len(s.subs)))
+
 	for _, sub := range s.subs {
 		select {
 		case sub.C <- ann:
@@ -172,6 +198,8 @@ func (s *Service) processUDP(conn *net.UDPConn) {
 
 		// Update the showtime Time
 		s.Trigger(recv)
+
+		metricCueQLabCount.Add(1)
 	}
 }
 
@@ -186,6 +214,8 @@ func (s *Service) Trigger(cue string) {
 
 	s.Echo.Logger.Info("triggering cue:", cue)
 	s.notify(CueNotification)
+
+	metricCueCount.Add(1)
 }
 
 // Subscription represents a subscription to showtime announcements
