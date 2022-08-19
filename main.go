@@ -16,6 +16,7 @@ import (
 	"github.com/CyCoreSystems/audimance/showtime"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+    "github.com/labstack/echo-contrib/prometheus"
 	"github.com/labstack/gommon/log"
 	"golang.org/x/net/websocket"
 )
@@ -108,6 +109,9 @@ func main() {
 	})
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+
+	p := prometheus.NewPrometheus("audimance", nil)
+	p.Use(e)
 
 	fList, err := content.ReadDir("app/_snowpack/pkg")
 	if err != nil {
