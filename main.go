@@ -14,9 +14,10 @@ import (
 	"github.com/CyCoreSystems/audimance/agenda"
 	"github.com/CyCoreSystems/audimance/internal/osc"
 	"github.com/CyCoreSystems/audimance/showtime"
+	"github.com/labstack/echo-contrib/prometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-    "github.com/labstack/echo-contrib/prometheus"
+	prom "github.com/prometheus/client_golang/prometheus"
 	"github.com/labstack/gommon/log"
 	"golang.org/x/net/websocket"
 )
@@ -42,6 +43,17 @@ var oscRoomIndex int
 // debug enables debug mode, which uses local files
 // instead of bundled ones
 var debug bool
+
+var (
+	metricRoomEntry *prom.CounterVec
+)
+
+func init() {
+	metricRoomEntry = prom.NewCounterVec(prom.CounterOpts{
+		Name: "audimance_room_load",
+		Help: "Total number of room loads",
+	}, []string{"kind"})
+}
 
 // Template contains an HTML templates for the web service
 type Template struct {
@@ -220,6 +232,10 @@ func enterRoom(c echo.Context) error {
 		Room:          r,
 	}
 
+	metricRoomEntry.With(prom.Labels{
+		"room": "spatial",
+	}).Add(1)
+
 	return ctx.Render(200, "room.html", data)
 }
 
@@ -274,6 +290,10 @@ func roomTracks(c echo.Context) error {
 		Announcements: ctx.Agenda.Announcements,
 		Room:          r,
 	}
+
+	metricRoomEntry.With(prom.Labels{
+		"room": "tracks",
+	}).Add(1)
 
 	return ctx.Render(200, "tracks.html", data)
 }
