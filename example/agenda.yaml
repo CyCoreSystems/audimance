@@ -27,7 +27,7 @@ rooms:
         tracks:
           - cue: "intro"
             audioFiles:
-              - "/performance/dylan.webm"
+              - "performance/dylan.webm"
       - name: "David"
         location:
           x: 30
@@ -36,7 +36,7 @@ rooms:
         tracks:
           - cue: "intro"
             audioFiles:
-              - "/performance/david.webm"
+              - "performance/david.webm"
   - name: "history"
     labelText: "history"
     roomTracks:
