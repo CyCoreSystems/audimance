@@ -8,6 +8,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
 const (
@@ -32,17 +33,17 @@ var (
 )
 
 func init() {
-	metricCueQLabCount = prometheus.NewCounter(prometheus.CounterOpts{
+	metricCueQLabCount = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "audimance_cue_qlab_total",
 		Help: "Total number of cues received from QLab",
 		})
 
-	metricCueCount = prometheus.NewCounter(prometheus.CounterOpts{
+	metricCueCount = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "audimance_cue_total",
 		Help: "Total number of cues processed",
 	})
 
-	metricSubsCount = prometheus.NewGauge(prometheus.GaugeOpts{
+	metricSubsCount = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "audimance_subs_count",
 		Help: "Current number of active subscriptions",
 	})

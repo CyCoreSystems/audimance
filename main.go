@@ -18,6 +18,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	prom "github.com/prometheus/client_golang/prometheus"
+	promauto "github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/labstack/gommon/log"
 	"golang.org/x/net/websocket"
 )
@@ -49,7 +50,7 @@ var (
 )
 
 func init() {
-	metricRoomEntry = prom.NewCounterVec(prom.CounterOpts{
+	metricRoomEntry = promauto.NewCounterVec(prom.CounterOpts{
 		Name: "audimance_room_load",
 		Help: "Total number of room loads",
 	}, []string{"kind"})
