@@ -143,6 +143,10 @@ type Cue struct {
 	// Name is the unique, human-friendly name for this cue
 	Name string `json:"name" yaml:"name"`
 
+	// Notes is a free-form notes field.
+	// This is optional and only displayed in the administrative console.
+	Notes string `json:"notes" yaml:"notes"`
+
 	// QLabID is the unique identifier for this cue in QLab (informational only;
 	// not used by Audimance)
 	QLabID string `json:"qlabID" yaml:"qlabID"`
