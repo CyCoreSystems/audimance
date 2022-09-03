@@ -53,7 +53,7 @@ func init() {
 	metricRoomEntry = promauto.NewCounterVec(prom.CounterOpts{
 		Name: "audimance_room_load",
 		Help: "Total number of room loads",
-	}, []string{"kind"})
+	}, []string{"room"})
 }
 
 // Template contains an HTML templates for the web service
