@@ -30,6 +30,7 @@ var (
 	metricCueCount prometheus.Counter
 	metricCueQLabCount prometheus.Counter
 	metricSubsCount prometheus.Gauge
+	metricTimeSinceLastCue prometheus.Gauge
 )
 
 func init() {
@@ -46,6 +47,11 @@ func init() {
 	metricSubsCount = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "audimance_subs_count",
 		Help: "Current number of active subscriptions",
+	})
+
+	metricTimeSinceLastCue = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "audimance_time_since_last_cue_s",
+		Help: "Number of seconds since the last-received cue",
 	})
 }
 
@@ -167,6 +173,10 @@ func (s *Service) notify(cause string) {
 	var points []*TimePoint
 	for _, t := range s.Times {
 		points = append(points, t.Now())
+	}
+
+	if len(s.Times) > 0 {
+		metricTimeSinceLastCue.Set(s.Times[len(s.Times)-1].OffsetSeconds())
 	}
 
 	ann := &Announcement{
