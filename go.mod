@@ -6,7 +6,7 @@ require (
 	github.com/gofrs/uuid v4.2.0+incompatible
 	github.com/hypebeast/go-osc v0.0.0-20220308234300-cec5a8a1e5f5
 	github.com/labstack/echo-contrib v0.13.0
-	github.com/labstack/echo/v4 v4.7.2
+	github.com/labstack/echo/v4 v4.9.0
 	github.com/labstack/gommon v0.3.1
 	github.com/prometheus/client_golang v1.12.2
 	golang.org/x/net v0.0.0-20220728030405-41545e8bf201
