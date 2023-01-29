@@ -10,7 +10,7 @@ require (
 	github.com/labstack/gommon v0.3.1
 	github.com/prometheus/client_golang v1.12.2
 	golang.org/x/net v0.0.0-20220728030405-41545e8bf201
-	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )
 
 require (

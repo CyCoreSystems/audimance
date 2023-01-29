@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 var fileFormats = []string{"mp3", "m4a", "webm"}
