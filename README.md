@@ -45,6 +45,10 @@ the template for a room (a place where a performance occurs).
 There are very few constraints on styling or format overall.  Instead, the data
 structures are accessible via Go `text/html` templating and from Javascript.
 
+### Agenda (showfile)
+
+An example of an `agenda.yaml` file can be found in `/example`, but the full structure of this file is describes by `/agenda/agenda.go`.
+
 ### Go template data structures
 
 The data structure available to a Room is:
