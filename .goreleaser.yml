@@ -11,8 +11,6 @@ builds:
         - amd64
         - arm64
         - arm
-     hooks:
-       pre: npm run build
 
 archives:
   - id: audimance
