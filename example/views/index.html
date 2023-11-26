@@ -3,18 +3,36 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="x-ua-compatible">
-
+	
+	<!-- You probably want to change the contents of the title tag 
+	to your show title or something else descriptive --> 
 	<title>Audimance - Room List</title>
 </head>
 <body>
-
-	Rooms List:
-
+	<!-- USE THIS if you are running a single room -->
+		<!-- Go to Performance: -->
+	<!-- USE THIS if you are running multiple rooms -->
+		Rooms List:
 	<ul>
 		{{range .Rooms}}
 		<li><a href="/room/{{.ID}}">{{.LabelText}}</a></li>
 		{{end}}
 	</ul>
-
+	<ul id="preshow">
+		<!-- This can hold all your out-of-runtime content, like 
+		the audio program, performer/set/venue descriptions, 
+		audio maps (to the restrooms and quiet space!), and 
+		any auxiliary content. List them in lis -->
+		<li><strong>EXAMPLE AUDIO RECORDED PROGRAM: 12 min</strong>
+			<!-- NOTE: always good form to say how long a recording is -->
+			<audio controls>
+				<!-- list your sources in fallback order here -->
+				<source src="media/static/EXAMPLE.webm" />
+				<source src="media/static/EXAMPLE.mp3" />
+				<source src="media/static/EXAMPLE.wav" />
+			</audio>
+		</li>
+	</ul>
+	<script type="module" src="/js/index.js"></script>
 </body>
 </html>
