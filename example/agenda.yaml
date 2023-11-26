@@ -2,26 +2,27 @@
 title: "Example Performance"
 
 #Assumed steps: You have proper DNS and TLS certs for the domain and service
-performanceURL: "http://localhost/live"
+performanceURL: "https://mydomain.com/live"
 
 #Cues begin with whatever pre-show warning (note these will still have to be triggered in qlab) and roll into your show cues.
 #Show cues should be cut to be NO LONGER than 5 mins per cue to assure not freezing anyone's phone browser.
-#The more simultaneous tracks available, the shorter the duration between cues should be.  See README for showfile hookup.
+#The more simultaneous tracks available, the shorter the duration between cues should be.  
+#See README for showfile hookup. You should be sending the contents of data over the UDP port (usually 9001) from qLab.
 
 cues:
   - name: "5min"
-    qlabID: "010101-11"
     data: "5-minute warning"
   - name: "intro"
-    qlabID: "010102"
     data: "blah"
     redirectPerformance: true
   - name: "erste"
-    qlabID: "020202"
     data: "blah, blah"
   - name: "zweite"
-    qlabID: "030105-01011"
     data: "blah, blah, blah"
+
+#If you are not using the spatial mode, you can remove/ignore the location data below.
+#Provide your sources in desired fallback order: be sure to include at least happy Android + iPhone options, 
+#eg .webm, .m4a, .mp3 
 
 rooms:
   - name: "stage"
