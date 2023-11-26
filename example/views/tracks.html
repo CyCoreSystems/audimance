@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="x-ua-compatible">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<title>Audimance - Track-based interface</title>
+
+   <link rel="stylesheet" href="/css/pure.css">
+   <link rel="stylesheet" href="/css/master.css">
+</head>
+<body>
+
+   <!--div id="debug"></div -->
+	<input type="hidden" id="roomName" value="{{.Room.Name}}">
+
+   <h3> Status: <span id="play">Loading Program</span> </h3>
+
+   <h3> Mix your tracks: </h3>
+
+   <ul>
+      {{ range .Room.Sources }}
+      <li>
+         <label class="selectme" name="{{.ID}}" for="input-{{.ID}}">{{.Name}}</label>
+         <input type="checkbox" class="selector" name="{{.ID}}" id="input-{{.ID}}" />
+         <div class="selectorstatus">&nbsp;</div>
+         <audio id="audio-{{.ID}}"/>
+      </li>
+      {{ end }}
+   </ul>
+
+
+	<script type="module" src="/js/tracks.js"></script>
+
+</body>
+</html>

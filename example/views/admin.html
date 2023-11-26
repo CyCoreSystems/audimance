@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="x-ua-compatible">
+
+	<title>Audimance - Administrative Interface</title>
+
+   <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+	<h3>Last Cue:</h3>
+	<div class="lastCue">
+		<span class="lastCueName" id="lastCue">-none-</span>
+		<span class="lastCueTime" id="sinceLastCue">-:--</span>
+	</div>
+
+	<h3>Available Cues:</h3>
+
+	<ul>
+		{{range .Cues}}
+		<li><button onclick="window.triggerCue({{.ID}})">{{.Name}}</button><span class="referenceTime">{{.FormattedReferenceTime}}</span></li>
+		{{end}}
+	</ul>
+
+	<script type="module" src="/js/admin.js"></script>
+</body>
+</html>

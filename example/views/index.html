@@ -5,16 +5,20 @@
 	<meta http-equiv="x-ua-compatible">
 
 	<title>Audimance - Room List</title>
+
+   <link rel="stylesheet" href="/css/pure.css"/>
+   <link rel="stylesheet" href="/css/master.css"/>
 </head>
 <body>
 
-	Rooms List:
-
-	<ul>
-		{{range .Rooms}}
-		<li><a href="/room/{{.ID}}">{{.LabelText}}</a></li>
-		{{end}}
-	</ul>
-
+   <ul id="preshow">
+         <li> Welcome to Audimance </li>
+         <li> Message from our sponsor: 5 minutes
+            <audio controls>
+               <source src="media/static/test.webm" />
+               <source src="media/static/test.mp3" />
+            </audio>
+         </li>
+   </ul>
 </body>
 </html>

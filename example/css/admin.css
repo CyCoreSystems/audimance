@@ -1,0 +1,14 @@
+body {
+	background-color: black;
+	color: white;
+}
+ 
+ul li {
+	list-style: none;
+	padding-top: 20px;  
+	} 
+
+.sourceText {
+	font-size: 20px;
+}
+.referenceTime { padding-left: 7px;  }

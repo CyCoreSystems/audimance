@@ -1,0 +1,33 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="x-ua-compatible">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<title>Audimance - WIRED Performance</title>
+
+   <link rel="stylesheet" href="/css/pure.css">
+   <link rel="stylesheet" href="/css/master.css">
+</head>
+<body>
+
+   <h3> Select your experience </h3>
+
+   <!-- this list contains links to the spatialised form of the live performance -->
+	<ul id="spatial">
+		{{range .Rooms}}
+		<li><a href="/room/{{.ID}}">Spatial Mixing {{.LabelText}}</a></li>
+		{{end}}
+	</ul>
+
+   <!-- this list contains links to the menu-based form of the live performance -->
+	<ul id="tracks">
+		{{range .Rooms}}
+		<li><a href="/tracks/{{.ID}}">Menu Mixing {{.LabelText}}</a></li>
+		{{end}}
+	</ul>
+
+</body>
+</html>
