@@ -1,5 +1,13 @@
+#Change me to your show name!
 title: "Example Performance"
+
+#Assumed steps: You have proper DNS and TLS certs for the domain and service
 performanceURL: "http://localhost/live"
+
+#Cues begin with whatever pre-show warning (note these will still have to be triggered in qlab) and roll into your show cues.
+#Show cues should be cut to be NO LONGER than 5 mins per cue to assure not freezing anyone's phone browser.
+#The more simultaneous tracks available, the shorter the duration between cues should be.  See README for showfile hookup.
+
 cues:
   - name: "5min"
     qlabID: "010101-11"
