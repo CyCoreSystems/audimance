@@ -265,7 +265,8 @@ func admin(c echo.Context) error {
 }
 
 func live(c echo.Context) error {
-	return c.Render(200, "live.html", nil)
+	ctx := c.(*CustomContext)
+	return c.Render(200, "live.html", ctx.Agenda)
 }
 
 func roomTracks(c echo.Context) error {
