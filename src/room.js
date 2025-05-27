@@ -55,7 +55,7 @@ class Position {
 // SpatialRoom provides a d3-based view containing a reticle for locating the listener in a field of audio sources.
 // This room will play spatialised audio synchronised to an Audimance performance server.
 // There must exist in the DOM a `<div id="audimance-room"></div>` for it to insert its SVG.
-// 
+//
 // It should be passed an object containing an `agenda` and a `roomName` for a room contained within that agenda.
 // ex:
 //      room = new SpatialRoom({
@@ -122,6 +122,42 @@ export class SpatialRoom extends EventTarget {
       window.addEventListener('resize', _.bind(this.redraw, this))
    }
 
+   enableAudio() {
+      self = this
+      self.audioLoaded = true
+
+      loadAudio(self)
+
+      // Disable display sleep
+      noSleep.enable()
+   }
+
+   drawPlayButton() {
+      self = this
+
+      // Draw play button
+      self.svg.selectAll("text.button").data([0]).enter().append("text")
+         .text("Click to Play")
+         .attr("fill", "lightgrey")
+         .attr("class", "button")
+         .attr("text-anchor", "middle")
+         .attr("x", self.scaleX(self.data.dimensions.width/2))
+         .attr("y", self.scaleY(self.data.dimensions.depth/2))
+         .attr("width", self.scaleX(self.data.dimensions.width))
+         .attr("height", self.scaleY(self.data.dimensions.depth))
+         .on("click", function(ev) {
+            console.log("play clicked")
+
+            self.enableAudio()
+
+            // Draw the sound field
+            _.bind(self.redraw, self)()
+
+            // remove play button
+            this.remove()
+         })
+   }
+
    redraw() {
       let self = this
 
@@ -142,31 +178,17 @@ export class SpatialRoom extends EventTarget {
       console.log("redrawing", width, height)
 
       if(!self.audioLoaded) {
-         // Draw play button
-         self.svg.selectAll("text.button").data([0]).enter().append("text")
-            .text("Click to Play")
-            .attr("fill", "lightgrey")
-            .attr("class", "button")
-            .attr("text-anchor", "middle")
-            .attr("x", self.scaleX(self.data.dimensions.width/2))
-            .attr("y", self.scaleY(self.data.dimensions.depth/2))
-            .attr("width", self.scaleX(self.data.dimensions.width))
-            .attr("height", self.scaleY(self.data.dimensions.depth))
-            .on("click", function(ev) {
-               console.log("play clicked")
-               self.audioLoaded = true
-               loadAudio(self)
-
-               // Disable display sleep 
-               noSleep.enable()
-
-               // Draw the sound field
-               _.bind(self.redraw, self)()
-
-               // remove play button
-               this.remove()
-            })
-         return
+         if (typeof(window.AUDIMANCE_WRAPPER_PLATFORM) !== "undefined") {
+            // User is in the Audimance app.
+            if (window.AUDIMANCE_WRAPPER_PLATFORM === "iOS") {
+               self.enableAudio()
+            }
+         } else {
+            // Draw the play button
+            // and defer drawing the sound field until the user clicks it
+            self.drawPlayButton()
+            return
+         }
       }
 
       // Add listener position indicator
@@ -243,7 +265,7 @@ function loadAudioResonance(room) {
 
       // Subsequent presses change the listener position
       console.log("changing listener position to: " + room.listenerPosition.toSVG().x + "," + room.listenerPosition.toSVG().y)
-      
+
       // **NOTE**:  listener position is as offset from the CENTER of the room, not the origin
       // Unlike room dimensions, these are x, y, z.
       room.scene.setListenerPosition(
@@ -321,7 +343,7 @@ class Track {
          self.resync()
          return
       })
-      
+
       el.addEventListener('seeked', function(ev) {
          console.log('seeked')
 
@@ -402,7 +424,7 @@ class Track {
       if( !latestCuedTrack || latestCuedTrack.cue != self.myCue ) {
          // not our cue
          self.el.pause()
-         return false 
+         return false
       }
 
       if(now > self.el.duration) {
@@ -418,6 +440,7 @@ class Track {
          console.log(self.src.name +" out of sync; reseeking.  Diff: " + diff)
          self.el.volume = 0
          self.el.currentTime = now
+
          return false
       }
 

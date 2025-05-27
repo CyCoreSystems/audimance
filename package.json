@@ -5,11 +5,10 @@
   "type": "module",
   "main": "app.js",
   "scripts": {
-    "start": "snowpack dev",
-    "build": "snowpack build"
+    "build": "npx snowpack build"
   },
   "author": "",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "devDependencies": {
     "snowpack": "^3.8.8"
   },
