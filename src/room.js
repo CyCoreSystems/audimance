@@ -3,6 +3,7 @@ import * as d3 from 'd3';
 import _ from 'lodash';
 import {ResonanceAudio} from '@3den.club/resonance-audio';
 import NoSleep from 'nosleep.js';
+import Environment from './environment.js';
 
 // Local upstream dependencies
 //import defaultExport from './resonance-audio/main.js';
@@ -178,14 +179,12 @@ export class SpatialRoom extends EventTarget {
       console.log("redrawing", width, height)
 
       if(!self.audioLoaded) {
-         if (typeof(window.AUDIMANCE_WRAPPER_PLATFORM) !== "undefined") {
-            // User is in the Audimance app.
-            if (window.AUDIMANCE_WRAPPER_PLATFORM === "iOS") {
-               self.enableAudio()
-            }
+         if (Environment.isRunningInApp) {
+            self.enableAudio()
          } else {
-            // Draw the play button
-            // and defer drawing the sound field until the user clicks it
+            // Draw the play button and defer
+            // rendering the sound field until
+            // the user selects play.
             self.drawPlayButton()
             return
          }

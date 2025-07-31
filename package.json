@@ -2,6 +2,9 @@
   "name": "audimance-app",
   "version": "1.0.0",
   "description": "Audimance Engine JS App",
+  "engines" : {
+    "node" : ">=16.0.0 <20.0.0"
+  },
   "type": "module",
   "main": "app.js",
   "scripts": {

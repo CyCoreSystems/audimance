@@ -1,0 +1,60 @@
+# Roadmap: Audimance
+
+### Summary
+
+Audimance is a tool for the creation and deployment of user-directed artistic audio experiences.
+Content may be designed for use in isolation, as accompaniment to other media, or in conjunction
+with live performance using QLab.
+
+### Mission
+
+Audimance enables a user-centered, flexibly complex, audio environment ideal for nonvisual audiences
+and can be used to provide either single-track or multi-track audio description. Content can be spatialized.
+
+Audimance provides a flexible deployment platform which:
+- permits artists and content creators to easily deploy single or multi-track content
+- facilitates venues in providing consistently available accessibility without large dedicated hardware systems
+- creates user-directed aesthetic experiences which prioritize user agency for style and complexity
+
+Critically, Audimance is designed to facilitate the use of pre-recorded descriptive content for performing arts
+synchronized via QLab or other (OSC or UDP) network cue delivery mechanisms for accurate and finely timed delivery
+of accessible communal experience.
+
+## Goals
+
+### Mobile-native
+
+Conversion from the alpha webapp to a native mobile deployment is necessary
+to facilitate ease of use for audiences, artists, and venues as well as
+to implement both necessary and nice-to-have UI features.
+
+*Actions*
+We are actively forming a team and soliciting support for this major milestone.
+If you are interested in participating, or if your company can support this effort, please reach out.
+
+### Creator UI
+
+Currently, content is manually adjusted, uploaded, and spatially placed by editing the text fille.
+This needs a GUI plus functionality for auto-adjusting audio files and spatializing the result for
+novice users.
+
+### Venue UI
+
+Currently, show selection and content availability is managed by network access.  Moving forward, for
+a cloud-based service venue operators or artists will need to be able to set up venues and events
+with geofencing and time bounds for IP protection.
+
+### Visual clone
+
+Based on research conducted by Kinetic Light, the design model pioneered in Audimance's alpha deployment
+has been determined to also be suitable for deploying accessible content for d/Deaf & Hard-of-Hearing
+audiences.
+
+*Actions*
+Back-end refactor for content type flexibility //COMPLETE
+Determine architecture of single/dual deployments //IN-PROCESS
+Design UI for visual content //NEEDS DOING
+
+### Documentation
+
+Audimance needs user documentation for content creation, end-users, and venues.
