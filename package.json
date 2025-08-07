@@ -2,14 +2,29 @@
   "name": "audimance-app",
   "version": "1.0.0",
   "description": "Audimance Engine JS App",
+  "engines" : {
+    "node" : ">=16.0.0 <20.0.0"
+  },
   "type": "module",
   "main": "app.js",
   "scripts": {
-    "start": "snowpack dev",
-    "build": "snowpack build"
+    "build": "npx snowpack build"
   },
-  "author": "",
-  "license": "ISC",
+  "contributors": [
+    {
+      "name": "Laurel Lawson",
+      "url": "https://cycoresys.com"
+    },
+    {
+      "name": "Seán C. McCord",
+      "url": "https://cycoresys.com"
+    },
+    {
+      "name": "Colin Clark",
+      "url": "https://lichen.coop"
+    }
+  ],
+  "license": "Apache-2.0",
   "devDependencies": {
     "snowpack": "^3.8.8"
   },

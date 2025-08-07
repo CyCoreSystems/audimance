@@ -1,18 +1,44 @@
 # Audimance
 
 Audimance is a tool for the creation and deployment of user-directed artistic audio experiences.
-Content may be designed for use in isolation, as accompaniment to other media, or in conjunction 
-with live performance using QLab. 
+Content may be designed for use in isolation, as accompaniment to other media, or in conjunction
+with live performance using QLab.
 
 Audimance enables a user-centered, flexibly complex, audio environment ideal for nonvisual audiences
-and can be used to provide either single-track or multi-track audio description.  
+and can be used to provide either single-track or multi-track audio description.
 
-## Why? 
+## License and Copyright
+Copyright 2018-2025 CyCore Systems, Inc. and Kinetic Light, Inc.
 
-Audimance was initially created to solve for a lack of equity and aesthetic sophistication 
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on
+an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied. See the License for the specific
+language governing permissions and limitations under the License.
+
+## Compatibility
+
+Audimance can currently only be built with versions of Node <= 19.9.0. This is due to its use of
+Snowpack, which no longer maintained and is incompatible with changes in Node's ES module support
+introduced in Node.js 20.
+
+We are planning to migrate Audimance to a fully supported build tool (probably Vite), but in the
+meantime we recommend using [nvm](https://github.com/nvm-sh/nvm) to manage Node.js versions.
+If you have nvm installed, ```nvm use``` will switch to the correct version of Node.js.
+
+## Why?
+
+Audimance was initially created to solve for a lack of equity and aesthetic sophistication
 in the previous standard practice of audio description for dance.  Designed by Laurel Lawson
 (laurellawson.com) and initially deployed alongside Kinetic Light's DESCENT (kineticlight.org/descent),
-Audimance is based on research and continual feedback from primarily nonvisual artists and arts audiences.  
+Audimance is based on research and continual feedback from primarily nonvisual artists and arts audiences.
 
 Audimance provides a flexible deployment platform which:
 - permits artists and content creators to easily deploy single or multi-track content
@@ -21,12 +47,12 @@ Audimance provides a flexible deployment platform which:
 
 ## Sample Use Cases
 
-* Rich multi-track audio description to accompany live or recorded dance, theatre, or other performing arts 
-* Spatialized sonic art or performance 
+* Rich multi-track audio description to accompany live or recorded dance, theatre, or other performing arts
+* Spatialized sonic art or performance
 * Simple audio description to accompany performing arts
-* Silent concerts or other sound experiences leveraging personal mobile devices 
+* Silent concerts or other sound experiences leveraging personal mobile devices
 * Delivery of programs, notes, or other textual assets accompanying performing or exhibited arts
-* Audio description for visual arts, such as gallery or museum exhibitions 
+* Audio description for visual arts, such as gallery or museum exhibitions
 
 ## Usage
 
