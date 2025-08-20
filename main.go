@@ -304,7 +304,7 @@ func performanceTime(c echo.Context) error {
 	ctx := c.(*CustomContext)
 
 	websocket.Handler(func(ws *websocket.Conn) {
-		defer ws.Close()
+		defer ws.Close() //nolint: errcheck
 
 		// Create a subscription to the showtime service
 		sub := ctx.ShowTime.Subscribe()

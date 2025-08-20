@@ -1,3 +1,4 @@
+version: 2
 project_name: Audimance
 builds:
    - binary: audimance
@@ -14,12 +15,12 @@ builds:
 
 archives:
   - id: audimance
-    format: binary
+    formats: [ 'binary' ]
     name_template: "{{ .Binary }}.{{ .Os }}.{{ .Arch }}"
 checksum:
   name_template: 'checksums.txt'
 snapshot:
-  name_template: "{{ .Tag }}-next"
+  version_template: "{{ .Tag }}-next"
 changelog:
   sort: asc
   filters:

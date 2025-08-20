@@ -151,7 +151,9 @@ func (s *Service) Run(qlabAddr string) error {
 	if err != nil {
 		return fmt.Errorf("failed to listen on UDP port: %w", err)
 	}
-	defer conn.Close()
+
+	defer conn.Close() //nolint: errcheck
+
 	go s.processUDP(conn)
 
 	// Tick on a periodic interval

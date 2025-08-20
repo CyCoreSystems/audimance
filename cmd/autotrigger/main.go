@@ -65,7 +65,7 @@ func findCue(cueName string) (string, error) {
 		return "", fmt.Errorf("failed to retrieve agenda: %w", err)
 	}
 
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint: errcheck
 
 	var a agenda.Agenda
 
