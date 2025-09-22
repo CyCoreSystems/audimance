@@ -121,6 +121,12 @@ export class SpatialRoom extends EventTarget {
 
       // Redraw sound field when the screen is resized
       window.addEventListener('resize', _.bind(this.redraw, this))
+
+      // And whenever the screen orientation changes.
+      if (typeof(window.screen) !== 'undefined' && screen.orientation) {
+         screen.orientation.addEventListener("change",
+            _.bind(this.redraw, this));
+      }
    }
 
    enableAudio() {
