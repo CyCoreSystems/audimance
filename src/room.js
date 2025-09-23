@@ -127,6 +127,12 @@ export class SpatialRoom extends EventTarget {
          screen.orientation.addEventListener('change',
             _.bind(this.redraw, this));
       }
+
+      // Override the default name of NoSleep's internal video element,
+      // which is displayed on the lock screen if the user puts their
+      // device to sleep manually, as well as on connected devices
+      // such as an Apple Watch.
+      noSleep.noSleepVideo.setAttribute("title", "Audimance")
    }
 
    enableAudio() {
