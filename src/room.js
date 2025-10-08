@@ -204,6 +204,25 @@ export class SpatialRoom extends EventTarget {
          }
       }
 
+      // Draw points of interest, which are hidden text labels only.
+      // Note: these are drawn first so they are under the listener possition.
+      let pois = self.svg.selectAll("text.poi").data(self.data.pointsOfInterest)
+      pois.enter().append("text")
+         .attr("text-anchor", "middle")
+         .attr("class", "poi")
+         .text(function(d) {
+            return d.name
+         })
+      .merge(pois)
+         .attr("x", function(d) {
+            return self.scaleX(
+               d.location.x + self.data.dimensions.width / 2)
+            })
+         .attr("y", function(d) {
+            return self.scaleY(
+               self.data.dimensions.depth/2-d.location.z)
+         })
+
       // Add listener position indicator
       let loc = self.svg.selectAll('circle.listener').data([{
          x: self.listenerPosition.toSVG().x,
@@ -242,10 +261,16 @@ export class SpatialRoom extends EventTarget {
             .attr("text-anchor", "middle")
             .attr("class", "sourceText")
             .attr("fill", "grey")
-            .text(function(d) { return d.name })
+            .text(function(d) {
+               return d.name
+            })
          .merge(labels)
-            .attr("x", function(d) { return self.scaleX(d.location.x + self.data.dimensions.width/2) })
-            .attr("y", function(d) { return self.scaleY(self.data.dimensions.depth/2-d.location.z) })
+            .attr("x", function(d) {
+               return self.scaleX(d.location.x + self.data.dimensions.width/2)
+            })
+            .attr("y", function(d) {
+               return self.scaleY(self.data.dimensions.depth/2-d.location.z)
+            })
             .attr("dy", "2em")
 
       this.dispatchEvent(new Event("redraw"))
