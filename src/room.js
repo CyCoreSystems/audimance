@@ -132,7 +132,9 @@ export class SpatialRoom extends EventTarget {
       // which is displayed on the lock screen if the user puts their
       // device to sleep manually, as well as on connected devices
       // such as an Apple Watch.
-      noSleep.noSleepVideo.setAttribute("title", "Audimance")
+      if (noSleep.noSleepVideo) {
+         noSleep.noSleepVideo.setAttribute("title", "Audimance")
+      }
    }
 
    enableAudio() {
@@ -245,6 +247,8 @@ export class SpatialRoom extends EventTarget {
             .attr("x", function(d) { return self.scaleX(d.location.x + self.data.dimensions.width/2) })
             .attr("y", function(d) { return self.scaleY(self.data.dimensions.depth/2-d.location.z) })
             .attr("dy", "2em")
+
+      this.dispatchEvent(new Event("redraw"))
    }
 }
 
