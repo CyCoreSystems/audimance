@@ -200,7 +200,7 @@ type Room struct {
 	Sources []*Source `json:"sources" yaml:"sources"`
 
 	// PointsOfInterest are non-source points in the room which are made available as targets to screen accessibility tooling.
-	PointsOfInterest []PointOfInterest `json:"pointsOfInterest" yaml:"pointsOfInterest"`
+	PointsOfInterest []*PointOfInterest `json:"pointsOfInterest" yaml:"pointsOfInterest"`
 
 	// RoomTracks is a list of audio tracks to be played in a room, sourced from
 	// everywhere.  This is generally exclusive with Sources.
