@@ -368,15 +368,19 @@ class Track {
       src.setMaxDistance(AudioMaxDistance)
 
       // Toggle play once to initialise mobile playback
-      let playPromise = el.play()
-      if (playPromise !== undefined) {
-         playPromise.then(_ => {
-            el.pause()
-         })
-         .catch(error => {
-            console.error("pause for source "+s.id+" track "+ index + " failed", error, error.stack)
-         })
-      }
+      el.addEventListener("canplay", () => {
+         let playPromise = el.play()
+         if (playPromise !== undefined) {
+            playPromise.then(_ => {
+               el.pause()
+            })
+            .catch(error => {
+               console.error("pause for source "+s.id+" track "+ index + " failed", error, error.stack)
+            })
+         }
+      }, {
+         once: true
+      })
 
       let lastSync = Date.now()
       performanceTime.addEventListener('timeSync', function() {
