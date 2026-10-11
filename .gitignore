@@ -6,3 +6,6 @@
 /app/
 /node_modules/
 /result
+/cmd/audimance/audimance
+/cmd/autotrigger/autotrigger
+/cmd/redirector/redirector

@@ -17,9 +17,9 @@ import (
 	"github.com/labstack/echo-contrib/prometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/gommon/log"
 	prom "github.com/prometheus/client_golang/prometheus"
 	promauto "github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/labstack/gommon/log"
 	"golang.org/x/net/websocket"
 )
 
@@ -136,7 +136,7 @@ func main() {
 
 	if oscAddr != "" {
 		if err := osc.SetupPositions(a, oscRoomIndex, oscAddr); err != nil {
-			log.Fatalf("failed to configure OSC positions: %w", err)
+			log.Fatalf("failed to configure OSC positions: %s", err.Error())
 		}
 	}
 

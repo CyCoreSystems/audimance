@@ -12,6 +12,30 @@ builds:
         - amd64
         - arm64
         - arm
+   - binary: autotrigger
+     main: ./cmd/autotrigger
+     env:
+        - CGO_ENABLED=0
+     goos:
+        - windows
+        - darwin
+        - linux
+     goarch:
+        - amd64
+        - arm64
+        - arm
+   - binary: redirector
+     main: ./cmd/redirector
+     env:
+        - CGO_ENABLED=0
+     goos:
+        - windows
+        - darwin
+        - linux
+     goarch:
+        - amd64
+        - arm64
+        - arm
 
 archives:
   - id: audimance
