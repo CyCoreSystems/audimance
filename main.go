@@ -126,15 +126,6 @@ func main() {
 	p := prometheus.NewPrometheus("audimance", nil)
 	p.Use(e)
 
-	fList, err := content.ReadDir("app/_snowpack/pkg")
-	if err != nil {
-		log.Fatal("failed to read directory:", err)
-	}
-
-	for _, f := range fList {
-		log.Printf("file: %s", f.Name())
-	}
-
 	if debug {
 		e.Logger.SetLevel(log.DEBUG)
 
