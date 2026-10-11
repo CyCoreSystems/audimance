@@ -13,6 +13,7 @@ builds:
         - arm64
         - arm
    - binary: autotrigger
+     id: autotrigger
      main: ./cmd/autotrigger
      env:
         - CGO_ENABLED=0
@@ -25,6 +26,7 @@ builds:
         - arm64
         - arm
    - binary: redirector
+     id: redirector
      main: ./cmd/redirector
      env:
         - CGO_ENABLED=0
@@ -52,14 +54,13 @@ changelog:
        - '^docs:'
        - '^test:'
 
-dockers:
-  - dockerfile: Dockerfile.goreleaser
-    image_templates:
-      - 'cycoresystems/audimance:{{ .Tag }}'
-      - 'cycoresystems/audimance:{{ .Major }}'
-      - 'cycoresystems/audimance:{{ .Major }}.{{ .Minor }}'
-      - 'cycoresystems/audimance:latest'
-      - 'ghcr.io/cycoresystems/audimance:{{ .Tag }}'
-      - 'ghcr.io/cycoresystems/audimance:{{ .Major }}'
-      - 'ghcr.io/cycoresystems/audimance:{{ .Major }}.{{ .Minor }}'
-      - 'ghcr.io/cycoresystems/audimance:latest'
+dockers_v2:
+  - images:
+      - cycoresystems/audimance
+      - ghcr.io/cycoresystems/audimance
+    tags:
+      - "{{ .Tag }}"
+      - "{{ .Major }}"
+      - "{{ .Major }}.{{ .Minor }}"
+      - "latest"
+    dockerfile: Dockerfile.goreleaser

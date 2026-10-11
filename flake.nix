@@ -55,6 +55,9 @@
             src = ./.;
 
             buildInputs = [ self.packages.${system}.app ];
+            nativeBuildInputs = [
+              pkgs.goreleaser
+            ];
 
             preBuild = ''
               mkdir app
