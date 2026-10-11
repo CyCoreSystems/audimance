@@ -17,9 +17,9 @@ import (
 	"github.com/labstack/echo-contrib/prometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/gommon/log"
 	prom "github.com/prometheus/client_golang/prometheus"
 	promauto "github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/labstack/gommon/log"
 	"golang.org/x/net/websocket"
 )
 
@@ -126,15 +126,6 @@ func main() {
 	p := prometheus.NewPrometheus("audimance", nil)
 	p.Use(e)
 
-	fList, err := content.ReadDir("app/_snowpack/pkg")
-	if err != nil {
-		log.Fatal("failed to read directory:", err)
-	}
-
-	for _, f := range fList {
-		log.Printf("file: %s", f.Name())
-	}
-
 	if debug {
 		e.Logger.SetLevel(log.DEBUG)
 
@@ -145,7 +136,7 @@ func main() {
 
 	if oscAddr != "" {
 		if err := osc.SetupPositions(a, oscRoomIndex, oscAddr); err != nil {
-			log.Fatalf("failed to configure OSC positions: %w", err)
+			log.Fatalf("failed to configure OSC positions: %s", err.Error())
 		}
 	}
 

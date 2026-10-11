@@ -25,13 +25,7 @@ language governing permissions and limitations under the License.
 
 ## Compatibility
 
-Audimance can currently only be built with versions of Node <= 19.9.0. This is due to its use of
-Snowpack, which no longer maintained and is incompatible with changes in Node's ES module support
-introduced in Node.js 20.
-
-We are planning to migrate Audimance to a fully supported build tool (probably Vite), but in the
-meantime we recommend using [nvm](https://github.com/nvm-sh/nvm) to manage Node.js versions.
-If you have nvm installed, ```nvm use``` will switch to the correct version of Node.js.
+Audimance is now compatible with at least Node v26.
 
 ## Why?
 

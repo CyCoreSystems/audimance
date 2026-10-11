@@ -2,14 +2,17 @@
   "name": "audimance-app",
   "version": "1.0.0",
   "description": "Audimance Engine JS App",
-  "engines" : {
-    "node" : ">=16.0.0 <20.0.0"
+  "engines": {
+    "node": ">=20.0.0 <27.0.0"
   },
   "type": "module",
   "main": "app.js",
   "scripts": {
-    "build": "npx snowpack build"
+    "build": "esbuild src/*.js --bundle --outdir=app --outbase=src"
   },
+  "files": [
+     "app/*"
+  ],
   "contributors": [
     {
       "name": "Laurel Lawson",
@@ -26,12 +29,12 @@
   ],
   "license": "Apache-2.0",
   "devDependencies": {
-    "snowpack": "^3.8.8"
+     "esbuild": "^0.28.2"
   },
   "dependencies": {
     "@3den.club/resonance-audio": "^1.0.1",
-    "d3": "^7.4.2",
-    "lodash": "^4.17.21",
+    "d3": "^7.9.0",
+    "lodash": "^4.18.1",
     "nosleep.js": "^0.12.0"
   }
 }

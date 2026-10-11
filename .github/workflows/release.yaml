@@ -39,13 +39,13 @@ jobs:
     - name: Set up Node
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '26'
 
     - run: npm ci
     - run: npm run build
 
     - name: GoReleaser
-      uses: goreleaser/goreleaser-action@v6.4.0
+      uses: goreleaser/goreleaser-action@v7.2.3
       with:
         args: release --clean
       env:
