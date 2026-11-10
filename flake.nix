@@ -4,45 +4,61 @@
   # Nixpkgs / NixOS version to use.
   inputs.nixpkgs.url = "nixpkgs/nixos-26.05";
 
+  inputs.flake-utils.url = "github:numtide/flake-utils";
+
   outputs =
-    { self, nixpkgs }:
-    let
-      # Generate a user-friendly version number.
-      version = builtins.substring 0 8 self.lastModifiedDate;
-
-      # System types to support.
-      supportedSystems = [
-        "x86_64-linux"
-        "x86_64-darwin"
-        "aarch64-linux"
-        "aarch64-darwin"
-      ];
-
-      # Helper function to generate an attrset '{ x86_64-linux = f "x86_64-linux"; ... }'.
-      forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
-
-      # Nixpkgs instantiated for supported system types.
-      nixpkgsFor = forAllSystems (system: import nixpkgs { inherit system; });
-
-    in
     {
+      self,
+      flake-utils,
+      nixpkgs,
+    }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
+      let
+        # Generate a user-friendly version number.
+        version = builtins.substring 0 8 self.lastModifiedDate;
+        src = ./.;
 
-      # Provide some binary packages for selected system types.
-      packages = forAllSystems (
-        system:
-        let
-          pkgs = nixpkgsFor.${system};
-        in
-        {
+        pkgs = nixpkgs.legacyPackages.${system};
+
+        buildInputs = with pkgs; [
+          gci
+          gofumpt
+          golangci-lint
+          pkgLint
+        ];
+
+        nativeBuildInputs = with pkgs; [
+          esbuild
+          go
+          nodejs_26
+        ];
+
+        pkgLint = pkgs.writeScriptBin "lint" ''
+          					  ${pkgs.nodejs_26}/bin/npm run build &&
+          					  golangci-lint run ./
+          					'';
+      in
+      {
+        devShells.default = pkgs.mkShell {
+          inherit
+            buildInputs
+            nativeBuildInputs
+            src
+            system
+            ;
+        };
+
+        # Provide some binary packages for selected system types.
+        packages = {
           app = pkgs.buildNpmPackage {
             pname = "audimance-app";
-            inherit version;
-
-            src = ./.;
-
-            nativeBuildInputs = [
-              pkgs.nodejs_26
-            ];
+            inherit
+              nativeBuildInputs
+              src
+              system
+              version
+              ;
 
             vendorHash = "sha256-Up6pjR9C2Z5wX6yLnEytdqjGCqKMCbLUvEzTZIMN8sU=";
             npmDepsHash = "sha256-6dDY4qR40LYpcVA8lkhSc3McupBpkYAOK8eDS35/Fvo=";
@@ -51,8 +67,7 @@
 
           default = pkgs.buildGoModule {
             pname = "audimance";
-            inherit version;
-            src = ./.;
+            inherit src system version;
 
             buildInputs = [ self.packages.${system}.app ];
             nativeBuildInputs = [
@@ -66,13 +81,17 @@
 
             vendorHash = "sha256-O03GmLuBuWegNMQJ3PMsojgFR/6bPRER4bjvxHxdUBw=";
           };
-        }
-      );
 
+        };
+
+      }
+    )
+    // {
       overlays.default = (
         final: prev: {
           audimance = self.packages.${prev.system}.default;
         }
       );
     };
+
 }
