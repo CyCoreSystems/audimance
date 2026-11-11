@@ -9,5 +9,5 @@
 /cmd/audimance/audimance
 /cmd/autotrigger/autotrigger
 /cmd/redirector/redirector
-.direnv/
+/.direnv
 .envrc

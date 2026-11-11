@@ -28,7 +28,7 @@ func SetupPositions(a *agenda.Agenda, roomIndex int, svc string) error {
 		}
 
 		if svcPort < 0 || svcPort > 65535 {
-		return fmt.Errorf("invalid port number %q", svcPort)
+		return fmt.Errorf("invalid port number %d", svcPort)
 		}
 
 	client := osc.NewClient(svcPieces[0], svcPort)

@@ -198,7 +198,7 @@ func main() {
 			return h(c)
 		}
 	})
-	e.Use(middleware.Logger())
+	e.Use(middleware.RequestLogger())
 	e.Use(middleware.Recover())
 
 	p := prometheus.NewPrometheus("audimance", nil)
