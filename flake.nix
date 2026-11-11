@@ -63,7 +63,7 @@
               ;
 
             vendorHash = "sha256-Up6pjR9C2Z5wX6yLnEytdqjGCqKMCbLUvEzTZIMN8sU=";
-            npmDepsHash = "sha256-6dDY4qR40LYpcVA8lkhSc3McupBpkYAOK8eDS35/Fvo=";
+            npmDepsHash = "sha256-u2MkAOFI0qVjii6z2Mbv4R7P3HbYfh0sYECuhSeK3rw=";
             npmDepsFetcherVersion = 2;
           };
 
