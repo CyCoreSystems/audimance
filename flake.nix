@@ -61,10 +61,10 @@
 
             preBuild = ''
               mkdir app
-              cp ${self.packages.${system}.app}/lib/node_modules/audimance-app/app/* app/
+              cp -r ${self.packages.${system}.app}/lib/node_modules/audimance-app/app/* app/
             '';
 
-            vendorHash = "sha256-c9foWekoQRXSwFpmk+gQbmqN5aqzhG9ABq9DaCoHagI=";
+            vendorHash = "sha256-SwcprLky9ZsRqBr3mQgd/pDpdaYiDsI7aXIjm3mSDsQ=";
           };
         }
       );

@@ -8,7 +8,7 @@
   "type": "module",
   "main": "app.js",
   "scripts": {
-    "build": "esbuild src/*.js --bundle --format=esm --splitting --outdir=app --outbase=src"
+    "build": "esbuild src/*.js src/css/*.css --bundle --format=esm --splitting --outdir=app --outbase=src --loader:.css=copy"
   },
   "files": [
      "app/*"

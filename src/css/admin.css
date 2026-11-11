@@ -1,0 +1,45 @@
+body {
+	background-color: black;
+	color: #b0b0b0;
+}
+
+ul li {
+	list-style: none;
+	padding-top: 10px;
+	padding-bottom: 10px;
+	}
+
+li:hover {
+	background-color: #202020;
+}
+
+.status {
+	width: 100%;
+	display: block;
+	position: fixed;
+}
+
+.statusText {
+	font-size: 30px;
+}
+
+.sourceText {
+	font-size: 20px;
+}
+
+.cueList {
+	width: 100%;
+}
+
+button {
+	background-color: #101010;
+	color: #b0b0b0;
+	border: 2px solid #004000;
+}
+
+.referenceTime { padding-left: 7px;  }
+
+.cueNotes {
+	font-style: italic;
+	text-align: left;
+}

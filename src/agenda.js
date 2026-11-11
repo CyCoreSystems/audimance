@@ -6,7 +6,9 @@ export function LoadAgenda(cb) {
       return
    }
 
-   fetch('/agenda.json')
+   // Fetches the agenda in the page's language.
+   let lang = document.documentElement.lang
+   fetch(lang ? '/agenda.json?lang=' + encodeURIComponent(lang) : '/agenda.json')
    .then(function(resp) {
       return resp.json();
    })

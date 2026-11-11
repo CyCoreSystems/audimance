@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"golang.org/x/text/language"
 	yaml "gopkg.in/yaml.v3"
 )
 
@@ -58,6 +59,13 @@ func New(filename string) (*Agenda, error) {
 			return nil, fmt.Errorf("failed to generate announcement %s: %w", ann.Name, err)
 		}
 	}
+
+	if err = a.validateLanguages(); err != nil {
+		return nil, err
+	}
+
+	a.localizeLabels(a.defaultLanguage())
+
 	return a, err
 }
 
@@ -97,6 +105,87 @@ type Agenda struct {
 	// server, and so not validation should be performed, and no modifications
 	// of the prefix be made.  This is not recommended.
 	RemoteMedia bool `json:"remoteMedia" yaml:"remoteMedia"`
+
+	// BCP 47 tags. First entry is the default language.
+	Languages []string `json:"languages" yaml:"languages"`
+}
+
+func (a *Agenda) defaultLanguage() string {
+	if len(a.Languages) == 0 {
+		return ""
+	}
+
+	return a.Languages[0]
+}
+
+// Localized returns a copy of the agenda with each source and point of interest labeled in the specified language.
+func (a *Agenda) Localized(lang string) *Agenda {
+	out := *a
+
+	out.Rooms = make([]*Room, len(a.Rooms))
+	for i, r := range a.Rooms {
+		room := *r
+
+		room.PointsOfInterest = make([]*PointOfInterest, len(r.PointsOfInterest))
+		for j, p := range r.PointsOfInterest {
+			poi := *p
+			room.PointsOfInterest[j] = &poi
+		}
+
+		room.Sources = make([]*Source, len(r.Sources))
+		for j, s := range r.Sources {
+			src := *s
+			room.Sources[j] = &src
+		}
+
+		out.Rooms[i] = &room
+	}
+
+	out.localizeLabels(lang)
+
+	return &out
+}
+
+func (a *Agenda) localizeLabels(lang string) {
+	for _, p := range a.allPointsOfInterest() {
+		p.Label = p.labelFor(lang)
+	}
+}
+
+func (a *Agenda) allPointsOfInterest() (out []*PointOfInterest) {
+	for _, r := range a.Rooms {
+		out = append(out, r.PointsOfInterest...)
+
+		for _, s := range r.Sources {
+			out = append(out, &s.PointOfInterest)
+		}
+	}
+
+	return out
+}
+
+func (a *Agenda) validateLanguages() error {
+	if err := validateLanguageTags(a.Languages); err != nil {
+		return err
+	}
+
+	for _, p := range a.allPointsOfInterest() {
+		if err := p.validateLabels(a.Languages); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func validateLanguageTags(languages []string) error {
+	for _, lang := range languages {
+		if _, err := language.Parse(lang); err != nil {
+			return fmt.Errorf("invalid language %q: %w", lang, err)
+		}
+	}
+
+	return nil
 }
 
 // AllTracks returns the list of all tracks for all rooms and announcements so
@@ -342,9 +431,34 @@ type PointOfInterest struct {
 	// Name is the unique, human-friendly name for this source
 	Name string `json:"name" yaml:"name"`
 
+	// Labels contains display text in each supported language, keyed by language code.
+	Labels map[string]string `json:"-" yaml:"labels"`
+
+	// Label is the display text in the language the agenda was localized to, or the name if there is no label.
+	Label string `json:"label" yaml:"-"`
+
 	// Location indicates a specific 3-dimensional coordinate in the room from
 	// which the audio of this source emanates
 	Location Point `json:"location" yaml:"location"`
+}
+
+func (p *PointOfInterest) labelFor(lang string) string {
+	if label := p.Labels[lang]; label != "" {
+		return label
+	}
+
+	return p.Name
+}
+
+// validateLabels checks that all POI labels are in one of the specified languages.
+func (p *PointOfInterest) validateLabels(languages []string) error {
+	for lang := range p.Labels {
+		if !slices.Contains(languages, lang) {
+			return fmt.Errorf("label for %q is in %q, which isn't one of the show's languages %v", p.Name, lang, languages)
+		}
+	}
+
+	return nil
 }
 
 func (p *PointOfInterest) generateID() error {
