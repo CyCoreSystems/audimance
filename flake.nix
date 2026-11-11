@@ -23,6 +23,7 @@
 
         buildInputs = with pkgs; [
           gci
+          git
           gofumpt
           golangci-lint
           pkgLint
@@ -35,12 +36,13 @@
         ];
 
         pkgLint = pkgs.writeScriptBin "lint" ''
-          					  ${pkgs.nodejs_26}/bin/npm run build &&
-          					  golangci-lint run ./
-          					'';
+          ${pkgs.nodejs_26}/bin/npm run build &&
+          golangci-lint run ./
+        '';
       in
       {
-        devShells.default = pkgs.mkShell {
+        # On macOS, mkShell breaks /usr/bin/git.
+        devShells.default = (if pkgs.stdenv.hostPlatform.isDarwin then pkgs.mkShellNoCC else pkgs.mkShell) {
           inherit
             buildInputs
             nativeBuildInputs
