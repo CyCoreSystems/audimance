@@ -209,7 +209,7 @@ export class SpatialRoom extends EventTarget {
          .attr("text-anchor", "middle")
          .attr("class", "poi")
          .text(function(d) {
-            return d.label || d.name
+            return d.label
          })
       .merge(pois)
          .attr("x", function(d) {
@@ -245,7 +245,7 @@ export class SpatialRoom extends EventTarget {
             .attr("r", 10)
             .attr("class", "source")
             .attr("fill", function(d, i) { return d3.schemeCategory10[i] })
-            .text(function(d) { return d.label || d.name })
+            .text(function(d) { return d.label })
          .merge(sources)
             .attr("cx", function(d) { return self.scaleX(d.location.x + self.data.dimensions.width/2) })
             .attr("cy", function(d) { return self.scaleY(self.data.dimensions.depth/2-d.location.z) })
@@ -260,7 +260,7 @@ export class SpatialRoom extends EventTarget {
             .attr("class", "sourceText")
             .attr("fill", "grey")
             .text(function(d) {
-               return d.label || d.name
+               return d.label
             })
          .merge(labels)
             .attr("x", function(d) {
