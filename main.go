@@ -220,7 +220,7 @@ func main() {
 	}
 
 	// Compile and attach templates
-	templates, err := loadTemplates("views", a.Languages)
+	templates, err := loadTemplates(os.DirFS("views"), a.Languages)
 	if err != nil {
 		fmt.Printf("failed to parse views: %s", err.Error())
 		os.Exit(1)

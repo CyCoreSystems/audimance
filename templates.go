@@ -2,12 +2,13 @@ package main
 
 import (
 	"html/template"
-	"path/filepath"
+	"io/fs"
+	"path"
 )
 
 // loadTemplates returns views for each language. Default views are keyed by "".
-func loadTemplates(viewDir string, languages []string) (map[string]*template.Template, error) {
-	base, err := template.ParseGlob(filepath.Join(viewDir, "*.html"))
+func loadTemplates(views fs.FS, languages []string) (map[string]*template.Template, error) {
+	base, err := template.ParseFS(views, "*.html")
 	if err != nil {
 		return nil, err
 	}
@@ -15,7 +16,7 @@ func loadTemplates(viewDir string, languages []string) (map[string]*template.Tem
 	sets := map[string]*template.Template{"": base}
 
 	for _, lang := range languages {
-		files, err := filepath.Glob(filepath.Join(viewDir, lang, "*.html"))
+		files, err := fs.Glob(views, path.Join(lang, "*.html"))
 		if err != nil {
 			return nil, err
 		}
@@ -30,7 +31,7 @@ func loadTemplates(viewDir string, languages []string) (map[string]*template.Tem
 			return nil, err
 		}
 
-		if sets[lang], err = set.ParseFiles(files...); err != nil {
+		if sets[lang], err = set.ParseFS(views, files...); err != nil {
 			return nil, err
 		}
 	}
