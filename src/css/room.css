@@ -1,0 +1,88 @@
+body {
+  background-color: white;
+  color: black;
+}
+
+div#audimance-room {
+  background-color: white;
+
+  /* Make room-space fullscreen */
+  position: fixed;
+  left: 0px;
+  right: 0px;
+  top: 0px;
+  bottom: 0px;
+}
+
+.button {
+	position: absolute;
+	inset: 0;
+	margin: auto;
+	width: fit-content;
+	height: fit-content;
+	font: inherit;
+	font-size: 40px;
+	font-weight: bold;
+	color: #222;
+	background: none;
+	border: none;
+}
+
+@media (pointer: coarse) {
+	.button {
+		font-size: 100px;
+	}
+}
+
+.sourceText {
+	font-size: 2em;
+    font-family: sans-serif;
+}
+
+svg text {
+  fill: #222;
+  font-weight: bold;
+}
+
+svg text.poi {
+  fill: white;
+}
+
+svg circle {
+  r: 15px;
+}
+
+svg circle.listener {
+  stroke: black;
+  fill: #eee;
+  r: 20px;
+  stroke-width: 2px;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background: black;
+    color: #ddd;
+  }
+
+  div#audimance-room {
+    background-color: black;
+  }
+
+  svg text {
+    fill: #ddd;
+  }
+
+  .button {
+    color: #ddd;
+  }
+
+  svg text.poi {
+    fill: black;
+  }
+
+  svg circle.listener {
+    stroke: white;
+    fill: #222;
+  }
+}

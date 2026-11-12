@@ -23,6 +23,7 @@
 
         buildInputs = with pkgs; [
           gci
+          git
           gofumpt
           golangci-lint
           pkgLint
@@ -35,12 +36,13 @@
         ];
 
         pkgLint = pkgs.writeScriptBin "lint" ''
-          					  ${pkgs.nodejs_26}/bin/npm run build &&
-          					  golangci-lint run ./
-          					'';
+          ${pkgs.nodejs_26}/bin/npm run build &&
+          golangci-lint run ./
+        '';
       in
       {
-        devShells.default = pkgs.mkShell {
+        # On macOS, mkShell breaks /usr/bin/git.
+        devShells.default = (if pkgs.stdenv.hostPlatform.isDarwin then pkgs.mkShellNoCC else pkgs.mkShell) {
           inherit
             buildInputs
             nativeBuildInputs
@@ -61,7 +63,7 @@
               ;
 
             vendorHash = "sha256-Up6pjR9C2Z5wX6yLnEytdqjGCqKMCbLUvEzTZIMN8sU=";
-            npmDepsHash = "sha256-6dDY4qR40LYpcVA8lkhSc3McupBpkYAOK8eDS35/Fvo=";
+            npmDepsHash = "sha256-u2MkAOFI0qVjii6z2Mbv4R7P3HbYfh0sYECuhSeK3rw=";
             npmDepsFetcherVersion = 2;
           };
 
@@ -76,10 +78,10 @@
 
             preBuild = ''
               mkdir app
-              cp ${self.packages.${system}.app}/lib/node_modules/audimance-app/app/* app/
+              cp -r ${self.packages.${system}.app}/lib/node_modules/audimance-app/app/* app/
             '';
 
-            vendorHash = "sha256-O03GmLuBuWegNMQJ3PMsojgFR/6bPRER4bjvxHxdUBw=";
+            vendorHash = "sha256-lpmE99NjL0WaheoLfs2KCdhSuUF1yz/w9/Y5Ev9h7+0=";
           };
 
         };

@@ -1,0 +1,9 @@
+languages: [en, zh-TW]
+rooms:
+  - name: stage
+    pointsOfInterest:
+      - name: Downstage center
+    sources:
+      - name: Choreography
+        labels:
+          zh-Hant: 編舞

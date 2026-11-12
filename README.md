@@ -114,6 +114,62 @@ else.
 
 Feel free, too, to simply use it as a model on which to build your own.
 
+### Stylesheets
+
+Audimance provides default stylesheets for the spatial mixing room and the track list pages. It also provides parts of the Pure CSS framework and a collection of mobile styles. These can be overridden by show-specific templates as needed. For example:
+
+```html
+<!-- Audimance's default room styling. -->
+<link rel="stylesheet" href="/app/css/room.css">
+
+<!-- Show-specific room styling. -->
+<link rel="stylesheet" href="/css/room.css">
+```
+
+### Localizing an Audimance Performance
+
+The Audimance server supports shows in multiple languages. Supported languages are defined in `agenda.yaml` as BCP 47 tags. For example:
+
+```yaml
+languages: [en, zh-TW]
+```
+
+The first language listed is the default, and is used whenever a user's preferred language doesn't match any of the languages supported by the show.
+
+The user's language is resolved in the following order:
+
+1. The `lang` query parameter
+2. The browser's `Accept-Language` header
+3. The default language.
+
+Localized views are stored in directories for each language code (e.g. `views/zh-TW/index.html`). If a page doesn't have a translated version, the server will fall back to using the default template in `views/`.
+
+All source and point of interest labels are paramterized by language code. The
+`name` property serves as both an identifier and the fall-back option when there is no label for the user's current language. For example:
+
+```yaml
+sources:
+  - name: "Choreography"
+    labels:
+      zh-TW: "編舞"
+```
+
+HTML templates can refer to a label using `{{.Label}}`. For example:
+
+```html
+{{ range .Room.Sources }}
+<label for="input-{{.ID}}">{{.Label}}</label>
+{{ end }}
+```
+
+The label in this template renders as `編舞` for on a device set to `zh-TW`, and as `Choreography` for any other language.
+
+The spatial room's play button can be localized in each language-specific template. For example:
+
+```html
+<div id="audimance-room" data-play-label="點按播放"></div>
+```
+
 ### Dependencies
 
 Because Audimance is intended to be run at venues with unreliable internet, all
@@ -139,4 +195,3 @@ Audimance accepts cues on a UDP port (9001, by default) to be fed from external
 synchronization sources, such as from Figure53's
 [QLab](https://figure53.com/qlab/).  It expects the cue label to be received in
 case-sensitive plain text on the UDP port to trigger the cue.
-

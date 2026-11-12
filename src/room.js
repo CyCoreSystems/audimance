@@ -148,29 +148,27 @@ export class SpatialRoom extends EventTarget {
    }
 
    drawPlayButton() {
-      self = this
+      let self = this
 
-      // Draw play button
-      self.svg.selectAll("text.button").data([0]).enter().append("text")
-         .text("Click to Play")
-         .attr("fill", "lightgrey")
-         .attr("class", "button")
-         .attr("text-anchor", "middle")
-         .attr("x", self.scaleX(self.data.dimensions.width/2))
-         .attr("y", self.scaleY(self.data.dimensions.depth/2))
-         .attr("width", self.scaleX(self.data.dimensions.width))
-         .attr("height", self.scaleY(self.data.dimensions.depth))
-         .on("click", function(ev) {
-            console.log("play clicked")
+      if (self.playButton) {
+         return
+      }
 
-            self.enableAudio()
+      self.playButton = document.createElement("button")
+      self.playButton.textContent = self.el.dataset.playLabel || "Tap to Play"
+      self.playButton.className = "button"
 
-            // Draw the sound field
-            _.bind(self.redraw, self)()
+      self.playButton.addEventListener("click", function() {
+         console.log("play clicked")
 
-            // remove play button
-            this.remove()
-         })
+         self.playButton.remove()
+         self.enableAudio()
+
+         // Draw the sound field
+         self.redraw()
+      })
+
+      self.el.appendChild(self.playButton)
    }
 
    redraw() {
@@ -211,7 +209,7 @@ export class SpatialRoom extends EventTarget {
          .attr("text-anchor", "middle")
          .attr("class", "poi")
          .text(function(d) {
-            return d.name
+            return d.label
          })
       .merge(pois)
          .attr("x", function(d) {
@@ -247,7 +245,7 @@ export class SpatialRoom extends EventTarget {
             .attr("r", 10)
             .attr("class", "source")
             .attr("fill", function(d, i) { return d3.schemeCategory10[i] })
-            .text(function(d) { return d.name })
+            .text(function(d) { return d.label })
          .merge(sources)
             .attr("cx", function(d) { return self.scaleX(d.location.x + self.data.dimensions.width/2) })
             .attr("cy", function(d) { return self.scaleY(self.data.dimensions.depth/2-d.location.z) })
@@ -262,7 +260,7 @@ export class SpatialRoom extends EventTarget {
             .attr("class", "sourceText")
             .attr("fill", "grey")
             .text(function(d) {
-               return d.name
+               return d.label
             })
          .merge(labels)
             .attr("x", function(d) {
