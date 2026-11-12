@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/sha256"
 	"embed"
+	"encoding/hex"
 	"flag"
 	"fmt"
 	"html/template"
@@ -106,7 +107,8 @@ func appFileServer(files fs.FS) (echo.HandlerFunc, error) {
 			return err
 		}
 
-		etags["/"+name] = fmt.Sprintf(`"%x"`, sha256.Sum256(data))
+		sum := sha256.Sum256(data)
+		etags["/"+name] = `"` + hex.EncodeToString(sum[:]) + `"`
 		return nil
 	})
 	if err != nil {
