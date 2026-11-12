@@ -2,22 +2,9 @@ package agenda
 
 import (
 	"encoding/json"
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 )
-
-func load(t *testing.T, yaml string) (*Agenda, error) {
-	t.Helper()
-
-	path := filepath.Join(t.TempDir(), "agenda.yaml")
-	if err := os.WriteFile(path, []byte(yaml), 0o600); err != nil {
-		t.Fatal(err)
-	}
-
-	return New(path)
-}
 
 const bilingual = `
 languages: [en, zh-TW]
@@ -32,14 +19,14 @@ rooms:
 `
 
 func TestLabelsFallBackToNames(t *testing.T) {
-	a, err := load(t, `
+	a, err := New(strings.NewReader(`
 rooms:
   - name: stage
     pointsOfInterest:
       - name: Downstage center
     sources:
       - name: Choreography
-`)
+`))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,7 +45,7 @@ rooms:
 }
 
 func TestLocalizedLabels(t *testing.T) {
-	a, err := load(t, bilingual)
+	a, err := New(strings.NewReader(bilingual))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -85,7 +72,7 @@ func TestLocalizedLabels(t *testing.T) {
 }
 
 func TestLabelInJSON(t *testing.T) {
-	a, err := load(t, bilingual)
+	a, err := New(strings.NewReader(bilingual))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,14 +88,14 @@ func TestLabelInJSON(t *testing.T) {
 }
 
 func TestRejectsLabelInUnlistedLanguage(t *testing.T) {
-	_, err := load(t, strings.Replace(bilingual, "zh-TW: 編舞", "zh-Hant: 編舞", 1))
+	_, err := New(strings.NewReader(strings.Replace(bilingual, "zh-TW: 編舞", "zh-Hant: 編舞", 1)))
 	if err == nil {
 		t.Error("loaded an agenda with a label in a language it doesn't list")
 	}
 }
 
 func TestRejectsInvalidLanguage(t *testing.T) {
-	_, err := load(t, strings.Replace(bilingual, "languages: [en, zh-TW]", "languages: [en, \"not a tag!\"]", 1))
+	_, err := New(strings.NewReader(strings.Replace(bilingual, "languages: [en, zh-TW]", "languages: [en, \"not a tag!\"]", 1)))
 	if err == nil {
 		t.Error("loaded an agenda with an invalid language tag")
 	}

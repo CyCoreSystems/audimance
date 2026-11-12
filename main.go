@@ -156,7 +156,7 @@ func main() {
 	flag.Parse()
 
 	// Read the Agenda
-	a, err := agenda.New("agenda.yaml")
+	a, err := agenda.Load("agenda.yaml")
 	if err != nil {
 		fmt.Printf("failed to read agenda: %s", err.Error())
 		os.Exit(1)

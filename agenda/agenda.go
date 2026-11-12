@@ -1,9 +1,11 @@
 package agenda
 
 import (
+	"bytes"
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"os"
 	"slices"
 	"strings"
@@ -16,16 +18,22 @@ import (
 
 var fileFormats = []string{"mp3", "m4a", "webm"}
 
-// New attempts to load an agenda from the given filename
-func New(filename string) (*Agenda, error) {
+// Load reads an agenda from a YAML file.
+func Load(filename string) (*Agenda, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read agenda from file: %w", err)
 	}
 
+	return New(bytes.NewReader(data))
+}
+
+// New reads an agenda from a YAML stream reader.
+func New(src io.Reader) (*Agenda, error) {
 	a := new(Agenda)
 
-	if err := yaml.Unmarshal(data, a); err != nil {
+	err := yaml.NewDecoder(src).Decode(a)
+	if err != nil {
 		return nil, fmt.Errorf("failed to read YAML: %w", err)
 	}
 
