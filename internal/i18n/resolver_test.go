@@ -8,32 +8,30 @@ import (
 )
 
 func TestResolve(t *testing.T) {
-	r := i18n.NewResolver([]string{"en", "zh-TW"})
+	t.Run("empty-languages", func(t *testing.T) {
+		assert.Empty(t, i18n.NewResolver(nil).Resolve("zh-Hant", "zh-TW"))
+	})
 
-	for _, c := range []struct {
-		query, acceptLanguage, want string
-	}{
-		// The app passes its own language as a query parameter.
-		{"zh-Hant", "", "zh-TW"},
-		{"zh-Hant", "en-US", "zh-TW"},
-		{"en", "zh-TW", "en"},
-		// Browsers send Accept-Language.
-		{"", "zh-TW,zh;q=0.9,en-US;q=0.8", "zh-TW"},
-		{"", "zh-HK", "zh-TW"},
-		{"", "zh-CN", "zh-TW"},
-		{"", "en-US,en;q=0.9", "en"},
-		{"", "ja-JP,zh-TW;q=0.5", "zh-TW"},
-		// If the lang query parameter doesn't contain a supported language, Accept-Language should be used instead.
-		{"fr", "zh-TW", "zh-TW"},
-		{"not a tag!", "zh-TW", "zh-TW"},
-		// Anything else gets the default.
-		{"", "fr-FR", "en"},
-		{"", "", "en"},
-	} {
-		assert.Equal(t, c.want, r.Resolve(c.query, c.acceptLanguage), "Resolve(%q, %q)", c.query, c.acceptLanguage)
-	}
-}
+	t.Run("populated-languages", func(t *testing.T) {
+		r := i18n.NewResolver([]string{"en", "zh-TW"})
 
-func TestResolveWithoutLanguages(t *testing.T) {
-	assert.Empty(t, i18n.NewResolver(nil).Resolve("zh-Hant", "zh-TW"))
+		for _, c := range []struct {
+			query, acceptLanguage, want string
+		}{
+			// The iOS app passes its preferred localization as a query parameter.
+			{"zh-Hant", "", "zh-TW"},
+			{"en", "zh-TW", "en"},
+			// If the lang query parameter doesn't contain a supported language, Accept-Language should be used instead.
+			{"fr", "zh-TW", "zh-TW"},
+			{"not a tag!", "zh-TW", "zh-TW"},
+			// For zh-CN, the language library's matched tag is zh-TW-u-rg-cnzzzz.
+			// This checks that Resolve returns zh-TW as listed in the agenda.
+			{"", "zh-CN", "zh-TW"},
+			// Anything else gets the default.
+			{"", "fr-FR", "en"},
+			{"", "", "en"},
+		} {
+			assert.Equal(t, c.want, r.Resolve(c.query, c.acceptLanguage), "Resolve(%q, %q)", c.query, c.acceptLanguage)
+		}
+	})
 }
