@@ -1,0 +1,6 @@
+rooms:
+  - name: stage
+    pointsOfInterest:
+      - name: Downstage center
+    sources:
+      - name: Choreography

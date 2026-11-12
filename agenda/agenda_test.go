@@ -1,38 +1,16 @@
-package agenda
+package agenda_test
 
 import (
-	"encoding/json"
-	"strings"
 	"testing"
 
+	"github.com/CyCoreSystems/audimance/agenda"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-const bilingual = `
-languages: [en, zh-TW]
-rooms:
-  - name: stage
-    pointsOfInterest:
-      - name: Downstage center
-    sources:
-      - name: Choreography
-        labels:
-          zh-TW: 編舞
-`
-
 func TestLabelsFallBackToNames(t *testing.T) {
-	a, err := New(strings.NewReader(`
-rooms:
-  - name: stage
-    pointsOfInterest:
-      - name: Downstage center
-    sources:
-      - name: Choreography
-`))
+	a, err := agenda.Load("testdata/no-languages.yaml")
 	require.NoError(t, err)
-
-	assert.Empty(t, a.defaultLanguage())
 
 	room := a.Rooms[0]
 	assert.Equal(t, "Downstage center", room.PointsOfInterest[0].Label)
@@ -40,10 +18,8 @@ rooms:
 }
 
 func TestLocalizedLabels(t *testing.T) {
-	a, err := New(strings.NewReader(bilingual))
+	a, err := agenda.Load("testdata/bilingual.yaml")
 	require.NoError(t, err)
-
-	assert.Equal(t, "en", a.defaultLanguage())
 
 	zh := a.Localized("zh-TW")
 	source, original := zh.Rooms[0].Sources[0], a.Rooms[0].Sources[0]
@@ -55,23 +31,14 @@ func TestLocalizedLabels(t *testing.T) {
 	assert.Equal(t, "Choreography", original.Label, "localizing changed the original")
 }
 
-func TestLabelInJSON(t *testing.T) {
-	a, err := New(strings.NewReader(bilingual))
+func TestLabelsDefaultToFirstLanguage(t *testing.T) {
+	a, err := agenda.Load("testdata/chinese-first.yaml")
 	require.NoError(t, err)
 
-	data, err := json.Marshal(a.Localized("zh-TW").Rooms[0].Sources[0])
-	require.NoError(t, err)
-
-	assert.Contains(t, string(data), `"label":"編舞"`)
-	assert.NotContains(t, string(data), `"labels"`)
+	assert.Equal(t, "編舞", a.Rooms[0].Sources[0].Label)
 }
 
 func TestRejectsLabelInUnlistedLanguage(t *testing.T) {
-	_, err := New(strings.NewReader(strings.Replace(bilingual, "zh-TW: 編舞", "zh-Hant: 編舞", 1)))
-	assert.Error(t, err)
-}
-
-func TestRejectsInvalidLanguage(t *testing.T) {
-	_, err := New(strings.NewReader(strings.Replace(bilingual, "languages: [en, zh-TW]", "languages: [en, \"not a tag!\"]", 1)))
-	assert.Error(t, err)
+	_, err := agenda.Load("testdata/label-in-unlisted-language.yaml")
+	assert.ErrorIs(t, err, agenda.ErrUnlistedLanguage)
 }

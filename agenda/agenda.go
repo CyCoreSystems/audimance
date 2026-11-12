@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/md5"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -458,11 +459,14 @@ func (p *PointOfInterest) labelFor(lang string) string {
 	return p.Name
 }
 
+// ErrUnlistedLanguage is returned when an agenda contains a label in a language it doesn't support.
+var ErrUnlistedLanguage = errors.New("label is in a language that is not specified in the agenda's list of supported languages")
+
 // validateLabels checks that all POI labels are in one of the specified languages.
 func (p *PointOfInterest) validateLabels(languages []string) error {
 	for lang := range p.Labels {
 		if !slices.Contains(languages, lang) {
-			return fmt.Errorf("label for %q is in %q, which isn't one of the show's languages %v", p.Name, lang, languages)
+			return fmt.Errorf("%w: %q is labeled in %q, but the agenda lists %v", ErrUnlistedLanguage, p.Name, lang, languages)
 		}
 	}
 
