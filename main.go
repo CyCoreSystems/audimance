@@ -16,6 +16,7 @@ import (
 	"syscall"
 
 	"github.com/CyCoreSystems/audimance/agenda"
+	"github.com/CyCoreSystems/audimance/internal/i18n"
 	"github.com/CyCoreSystems/audimance/internal/osc"
 	"github.com/CyCoreSystems/audimance/showtime"
 	"github.com/labstack/echo-contrib/prometheus"
@@ -182,7 +183,7 @@ func main() {
 		agendas[lang] = a.Localized(lang)
 	}
 
-	resolver := newLanguageResolver(a.Languages)
+	resolver := i18n.NewResolver(a.Languages)
 
 	// Attach middleware
 	e.Use(func(h echo.HandlerFunc) echo.HandlerFunc {
