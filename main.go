@@ -179,12 +179,6 @@ func main() {
 		}
 	}()
 
-	// Assemble a copy of the agenda in the show's supported languages
-	agendas := map[string]*agenda.Agenda{"": a}
-	for _, lang := range a.Languages {
-		agendas[lang] = a.Localized(lang)
-	}
-
 	resolver := i18n.NewResolver(a.Languages)
 
 	// Attach middleware
@@ -195,7 +189,7 @@ func main() {
 
 			c := &CustomContext{
 				Context:  ctx,
-				Agenda:   agendas[lang],
+				Agenda:   a.Localized(lang),
 				ShowTime: svc,
 			}
 			return h(c)
