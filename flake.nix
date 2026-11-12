@@ -81,7 +81,7 @@
               cp -r ${self.packages.${system}.app}/lib/node_modules/audimance-app/app/* app/
             '';
 
-            vendorHash = "sha256-9gJUGBe5iwQvqLJj2vT8YNGXyDY6pqc3HqYrHqPfc2E";
+            vendorHash = "sha256-lpmE99NjL0WaheoLfs2KCdhSuUF1yz/w9/Y5Ev9h7+0=";
           };
 
         };

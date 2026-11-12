@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const bilingual = `
@@ -27,76 +30,48 @@ rooms:
     sources:
       - name: Choreography
 `))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	if lang := a.defaultLanguage(); lang != "" {
-		t.Errorf("default language = %q, want none", lang)
-	}
+	assert.Empty(t, a.defaultLanguage())
 
 	room := a.Rooms[0]
-	if got := room.PointsOfInterest[0].Label; got != "Downstage center" {
-		t.Errorf("point of interest label = %q, want its name", got)
-	}
-	if got := room.Sources[0].Label; got != "Choreography" {
-		t.Errorf("source label = %q, want its name", got)
-	}
+	assert.Equal(t, "Downstage center", room.PointsOfInterest[0].Label)
+	assert.Equal(t, "Choreography", room.Sources[0].Label)
 }
 
 func TestLocalizedLabels(t *testing.T) {
 	a, err := New(strings.NewReader(bilingual))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	if lang := a.defaultLanguage(); lang != "en" {
-		t.Errorf("default language = %q, want en", lang)
-	}
+	assert.Equal(t, "en", a.defaultLanguage())
 
 	zh := a.Localized("zh-TW")
 	source, original := zh.Rooms[0].Sources[0], a.Rooms[0].Sources[0]
 
-	if source.Label != "編舞" {
-		t.Errorf("Chinese source label = %q, want 編舞", source.Label)
-	}
-	if got := zh.Rooms[0].PointsOfInterest[0].Label; got != "Downstage center" {
-		t.Errorf("Chinese point of interest label = %q, want its name as the fallback", got)
-	}
-	if source.ID != original.ID || source.Name != original.Name {
-		t.Errorf("localized source has ID %q and name %q, want the original's %q and %q", source.ID, source.Name, original.ID, original.Name)
-	}
-	if original.Label != "Choreography" {
-		t.Errorf("localizing changed the original's label to %q", original.Label)
-	}
+	assert.Equal(t, "編舞", source.Label)
+	assert.Equal(t, "Downstage center", zh.Rooms[0].PointsOfInterest[0].Label, "untranslated labels fall back to the name")
+	assert.Equal(t, original.ID, source.ID)
+	assert.Equal(t, original.Name, source.Name)
+	assert.Equal(t, "Choreography", original.Label, "localizing changed the original")
 }
 
 func TestLabelInJSON(t *testing.T) {
 	a, err := New(strings.NewReader(bilingual))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	data, err := json.Marshal(a.Localized("zh-TW").Rooms[0].Sources[0])
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	if s := string(data); !strings.Contains(s, `"label":"編舞"`) || strings.Contains(s, `"labels"`) {
-		t.Errorf("source JSON = %s, want the resolved label and no label map", s)
-	}
+	assert.Contains(t, string(data), `"label":"編舞"`)
+	assert.NotContains(t, string(data), `"labels"`)
 }
 
 func TestRejectsLabelInUnlistedLanguage(t *testing.T) {
 	_, err := New(strings.NewReader(strings.Replace(bilingual, "zh-TW: 編舞", "zh-Hant: 編舞", 1)))
-	if err == nil {
-		t.Error("loaded an agenda with a label in a language it doesn't list")
-	}
+	assert.Error(t, err)
 }
 
 func TestRejectsInvalidLanguage(t *testing.T) {
 	_, err := New(strings.NewReader(strings.Replace(bilingual, "languages: [en, zh-TW]", "languages: [en, \"not a tag!\"]", 1)))
-	if err == nil {
-		t.Error("loaded an agenda with an invalid language tag")
-	}
+	assert.Error(t, err)
 }

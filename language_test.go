@@ -5,6 +5,9 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestResolve(t *testing.T) {
@@ -30,37 +33,27 @@ func TestResolve(t *testing.T) {
 		{"", "fr-FR", "en"},
 		{"", "", "en"},
 	} {
-		if got := r.Resolve(c.query, c.acceptLanguage); got != c.want {
-			t.Errorf("Resolve(%q, %q) = %q, want %q", c.query, c.acceptLanguage, got, c.want)
-		}
+		assert.Equal(t, c.want, r.Resolve(c.query, c.acceptLanguage), "Resolve(%q, %q)", c.query, c.acceptLanguage)
 	}
 }
 
 func TestResolveWithoutLanguages(t *testing.T) {
-	if got := newLanguageResolver(nil).Resolve("zh-Hant", "zh-TW"); got != "" {
-		t.Errorf("Resolve for a show without languages = %q, want \"\"", got)
-	}
+	assert.Empty(t, newLanguageResolver(nil).Resolve("zh-Hant", "zh-TW"))
 }
 
 func TestLoadTemplates(t *testing.T) {
 	views := t.TempDir()
 	write := func(name, content string) {
 		path := filepath.Join(views, name)
-		if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
-			t.Fatal(err)
-		}
-		if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, os.MkdirAll(filepath.Dir(path), 0o700))
+		require.NoError(t, os.WriteFile(path, []byte(content), 0o600))
 	}
 	write("index.html", `{{define "title"}}Program{{end}}index: {{template "title"}}`)
 	write("live.html", `live`)
 	write("zh-TW/index.html", `{{define "title"}}節目單{{end}}索引：{{template "title"}}`)
 
 	sets, err := loadTemplates(views, []string{"en", "zh-TW"})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	for _, c := range []struct{ lang, name, want string }{
 		{"", "index.html", "index: Program"},
@@ -70,11 +63,7 @@ func TestLoadTemplates(t *testing.T) {
 		{"zh-TW", "live.html", "live"},
 	} {
 		var buf bytes.Buffer
-		if err := sets[c.lang].ExecuteTemplate(&buf, c.name, nil); err != nil {
-			t.Fatalf("%q %s: %v", c.lang, c.name, err)
-		}
-		if got := buf.String(); got != c.want {
-			t.Errorf("%q %s = %q, want %q", c.lang, c.name, got, c.want)
-		}
+		require.NoError(t, sets[c.lang].ExecuteTemplate(&buf, c.name, nil), "%q %s", c.lang, c.name)
+		assert.Equal(t, c.want, buf.String(), "%q %s", c.lang, c.name)
 	}
 }
